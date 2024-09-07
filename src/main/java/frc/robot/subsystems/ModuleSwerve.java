@@ -51,7 +51,7 @@ public class ModuleSwerve extends SubsystemBase {
         m_turningCANcoder.optimizeBusUtilization();
 
         m_turningMotor.setInverted(true);
-        m_drivingMotor.setInverted(true);
+        m_drivingMotor.setInverted(false);
 
         m_turningMotor.setIdleMode(IdleMode.kBrake);
         m_drivingMotor.setIdleMode(IdleMode.kBrake);
@@ -62,7 +62,7 @@ public class ModuleSwerve extends SubsystemBase {
         m_drivingEncoder.setVelocityConversionFactor(
                 (DriveConstant.kWheelCirconf / DriveConstant.kDrivingGearRatio) / 60); // m/s
 
-        m_turningSparkMaxEncoder.setPosition(m_turningCANcoder.getAbsolutePosition().getValue() * (2 * Math.PI)); // probably doesn't work, to test
+        m_turningSparkMaxEncoder.setPosition(m_turningCANcoder.getAbsolutePosition().getValue() * (2 * Math.PI));
         m_turningSparkMaxEncoder.setPositionConversionFactor((2 * Math.PI) / DriveConstant.kTurningGearRatio); // motor rotations to radians
         m_turningSparkMaxEncoder
                 .setVelocityConversionFactor(((2 * Math.PI) / DriveConstant.kTurningGearRatio) / 60); // radians/s

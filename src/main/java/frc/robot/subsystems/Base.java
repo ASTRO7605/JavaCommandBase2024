@@ -13,6 +13,7 @@ import edu.wpi.first.util.WPIUtilJNI;
 
 import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import com.kauailabs.navx.frc.AHRS;
 import com.revrobotics.CANSparkBase.IdleMode;
@@ -71,6 +72,9 @@ public class Base extends SubsystemBase {
                         m_kFrontLeftModule.getPosition(),
                         m_kRearLeftModule.getPosition(), m_kRearRightModule.getPosition() });
         m_robotField.setRobotPose(m_poseEstimator.getEstimatedPosition());
+        SmartDashboard.putNumber("x position", m_poseEstimator.getEstimatedPosition().getX());
+        SmartDashboard.putNumber("y position", m_poseEstimator.getEstimatedPosition().getY());
+        SmartDashboard.putNumber("robot orientation", m_poseEstimator.getEstimatedPosition().getRotation().getDegrees());
 
     }
 
