@@ -62,7 +62,7 @@ public class RobotContainer {
             double turn = 0;
             turn = MathUtil.applyDeadband(m_turnStick.getX(), DriveConstant.kControllerRotationDeadband);
 
-            m_base.drive(dir_r * Math.sin(dir_theta), dir_r * Math.cos(dir_theta), turn, true);
+            m_base.drive(-dir_r * Math.sin(dir_theta), -dir_r * Math.cos(dir_theta), -turn, true);
         }, m_base));
     }
 

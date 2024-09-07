@@ -51,7 +51,7 @@ public class ModuleSwerve extends SubsystemBase {
         m_turningCANcoder.optimizeBusUtilization();
 
         m_turningMotor.setInverted(true);
-        m_drivingMotor.setInverted(false);
+        m_drivingMotor.setInverted(true);
 
         m_turningMotor.setIdleMode(IdleMode.kBrake);
         m_drivingMotor.setIdleMode(IdleMode.kBrake);
