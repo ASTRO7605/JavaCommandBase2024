@@ -63,6 +63,8 @@ public class Base extends SubsystemBase {
                         m_kRearLeftModule.getPosition(), m_kRearRightModule.getPosition() },
                 new Pose2d(new Translation2d(0, 0),
                         new Rotation2d(0)));
+
+        SmartDashboard.putData("Robot Measurement", m_robotField);
     }
 
     @Override
@@ -72,10 +74,6 @@ public class Base extends SubsystemBase {
                         m_kFrontLeftModule.getPosition(),
                         m_kRearLeftModule.getPosition(), m_kRearRightModule.getPosition() });
         m_robotField.setRobotPose(m_poseEstimator.getEstimatedPosition());
-        SmartDashboard.putNumber("x position", m_poseEstimator.getEstimatedPosition().getX());
-        SmartDashboard.putNumber("y position", m_poseEstimator.getEstimatedPosition().getY());
-        SmartDashboard.putNumber("robot orientation", m_poseEstimator.getEstimatedPosition().getRotation().getDegrees());
-
     }
 
     public void setIdleMode(IdleMode idleMode) {
