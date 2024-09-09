@@ -4,10 +4,14 @@
 
 package frc.robot;
 
+import com.revrobotics.CANSparkBase.IdleMode;
+
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import frc.robot.Constants.DriveConstant;
 
 /**
  * The VM is configured to automatically run this class, and to call the
@@ -21,7 +25,7 @@ import edu.wpi.first.wpilibj.Timer;
 public class Robot extends TimedRobot {
     private RobotContainer m_robotContainer;
 
-    // private Command m_autonomousCommand;
+    private Command m_autonomousCommand;
 
     private boolean haveWheelsBeenSetToCoast = false;
 
@@ -61,10 +65,18 @@ public class Robot extends TimedRobot {
     /** This function is called once each time the robot enters Disabled mode. */
     @Override
     public void disabledInit() {
+        m_robotContainer.setIdleModeSwerve(IdleMode.kBrake);
+        m_timerDisabled.restart();
+        haveWheelsBeenSetToCoast = false;
     }
 
     @Override
     public void disabledPeriodic() {
+        SmartDashboard.putString("Selected Auto", m_robotContainer.getSelectedAutoModeName());
+        if (m_timerDisabled.get() >= DriveConstant.kTimeBeforeCoast && !haveWheelsBeenSetToCoast) {
+            m_timerDisabled.stop();
+            m_robotContainer.setIdleModeSwerve(IdleMode.kCoast);
+        }
     }
 
     /**
@@ -73,12 +85,13 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void autonomousInit() {
-        // m_autonomousCommand = m_robotContainer.getAutonomousCommand();
+        m_robotContainer.setIdleModeSwerve(IdleMode.kCoast);
+        m_autonomousCommand = m_robotContainer.getAutonomousCommand();
 
-        // // schedule the autonomous command (example)
-        // if (m_autonomousCommand != null) {
-        // 	m_autonomousCommand.schedule();
-        // }
+        // schedule the autonomous command (example)
+        if (m_autonomousCommand != null) {
+            m_autonomousCommand.schedule();
+        }
     }
 
     /** This function is called periodically during autonomous. */
@@ -92,9 +105,11 @@ public class Robot extends TimedRobot {
         // teleop starts running. If you want the autonomous to
         // continue until interrupted by another command, remove
         // this line or comment it out.
-        // if (m_autonomousCommand != null) {
-        // 	m_autonomousCommand.cancel();
-        // }
+        m_robotContainer.resetGyroOffsetFromAuto();
+        m_robotContainer.setIdleModeSwerve(IdleMode.kBrake);
+        if (m_autonomousCommand != null) {
+            m_autonomousCommand.cancel();
+        }
     }
 
     /** This function is called periodically during operator control. */

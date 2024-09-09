@@ -10,12 +10,16 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.util.WPIUtilJNI;
-
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import com.kauailabs.navx.frc.AHRS;
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.util.HolonomicPathFollowerConfig;
+import com.pathplanner.lib.util.PIDConstants;
+import com.pathplanner.lib.util.ReplanningConfig;
 import com.revrobotics.CANSparkBase.IdleMode;
 
 import frc.robot.Constants.DriveConstant;
@@ -25,13 +29,13 @@ public class Base extends SubsystemBase {
     private final AHRS m_gyro = new AHRS(SPI.Port.kMXP);
 
     // important to follow order
-    private final ModuleSwerve m_kFrontRightModule = new ModuleSwerve(DriveConstant.kFrontRightTurningID,
+    private final ModuleSwerve m_frontRightModule = new ModuleSwerve(DriveConstant.kFrontRightTurningID,
             DriveConstant.kFrontRightDrivingID, DriveConstant.kFrontRightCANcoderID);
-    private final ModuleSwerve m_kFrontLeftModule = new ModuleSwerve(DriveConstant.kFrontLeftTurningID,
+    private final ModuleSwerve m_frontLeftModule = new ModuleSwerve(DriveConstant.kFrontLeftTurningID,
             DriveConstant.kFrontLeftDrivingID, DriveConstant.kFrontLeftCANcoderID);
-    private final ModuleSwerve m_kRearLeftModule = new ModuleSwerve(DriveConstant.kRearLeftTurningID,
+    private final ModuleSwerve m_rearLeftModule = new ModuleSwerve(DriveConstant.kRearLeftTurningID,
             DriveConstant.kRearLeftDrivingID, DriveConstant.kRearLeftCANcoderID);
-    private final ModuleSwerve m_kRearRightModule = new ModuleSwerve(DriveConstant.kRearRightTurningID,
+    private final ModuleSwerve m_rearRightModule = new ModuleSwerve(DriveConstant.kRearRightTurningID,
             DriveConstant.kRearRightDrivingID, DriveConstant.kRearRightCANcoderID);
 
     private final Field2d m_robotField = new Field2d();
@@ -50,19 +54,45 @@ public class Base extends SubsystemBase {
 
     private final SwerveDrivePoseEstimator m_poseEstimator = new SwerveDrivePoseEstimator(
             DriveConstant.kDriveKinematics, m_gyro.getRotation2d(),
-            new SwerveModulePosition[] { m_kFrontRightModule.getPosition(), m_kFrontLeftModule.getPosition(),
-                    m_kRearLeftModule.getPosition(), m_kRearRightModule.getPosition() },
+            new SwerveModulePosition[] { m_frontRightModule.getPosition(), m_frontLeftModule.getPosition(),
+                    m_rearLeftModule.getPosition(), m_rearRightModule.getPosition() },
             new Pose2d(new Translation2d(0, 0), new Rotation2d(0)));
 
     public Base() {
         m_gyro.reset();
 
         m_poseEstimator.resetPosition(m_gyro.getRotation2d(),
-                new SwerveModulePosition[] { m_kFrontRightModule.getPosition(),
-                        m_kFrontLeftModule.getPosition(),
-                        m_kRearLeftModule.getPosition(), m_kRearRightModule.getPosition() },
+                new SwerveModulePosition[] { m_frontRightModule.getPosition(),
+                        m_frontLeftModule.getPosition(),
+                        m_rearLeftModule.getPosition(), m_rearRightModule.getPosition() },
                 new Pose2d(new Translation2d(0, 0),
                         new Rotation2d(0)));
+
+        AutoBuilder.configureHolonomic(
+                this::getRobotPose, // Robot pose supplier
+                this::resetOdometry, // Method to reset odometry (will be called if your auto has a starting pose)
+                this::getRobotRelativeSpeeds, // ChassisSpeeds supplier. MUST BE ROBOT RELATIVE
+                this::driveRobotRelativeChassisSpeeds, // Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds
+                new HolonomicPathFollowerConfig( // HolonomicPathFollowerConfig, this should likely live in your Constants class
+                        new PIDConstants(DriveConstant.kPAutoMovementController, 0.0, 0.0), // Translation PID constants
+                        new PIDConstants(DriveConstant.kPAutoMovementController, 0.0, 0.0), // Rotation PID constants
+                        DriveConstant.kMaxAutoSpeed, // Max module speed, in m/s
+                        DriveConstant.kChassisRadius, // Drive base radius in meters. Distance from robot center to furthest module.
+                        new ReplanningConfig(true, true) // Default path replanning config. See the API for the options here
+                ),
+                () -> {
+                    // Boolean supplier that controls when the path will be mirrored for the red alliance
+                    // This will flip the path being followed to the red side of the field.
+                    // THE ORIGIN WILL REMAIN ON THE BLUE SIDE
+
+                    var alliance = DriverStation.getAlliance();
+                    if (alliance.isPresent()) {
+                        return alliance.get() == DriverStation.Alliance.Red;
+                    }
+                    return false;
+                },
+                this // Reference to this subsystem to set requirements
+        );
 
         SmartDashboard.putData("Robot Measurement", m_robotField);
     }
@@ -70,24 +100,24 @@ public class Base extends SubsystemBase {
     @Override
     public void periodic() {
         m_poseEstimator.update(m_gyro.getRotation2d(),
-                new SwerveModulePosition[] { m_kFrontRightModule.getPosition(),
-                        m_kFrontLeftModule.getPosition(),
-                        m_kRearLeftModule.getPosition(), m_kRearRightModule.getPosition() });
+                new SwerveModulePosition[] { m_frontRightModule.getPosition(),
+                        m_frontLeftModule.getPosition(),
+                        m_rearLeftModule.getPosition(), m_rearRightModule.getPosition() });
         m_robotField.setRobotPose(m_poseEstimator.getEstimatedPosition());
     }
 
     public void setIdleMode(IdleMode idleMode) {
-        m_kFrontRightModule.setIdleMode(idleMode);
-        m_kFrontLeftModule.setIdleMode(idleMode);
-        m_kRearLeftModule.setIdleMode(idleMode);
-        m_kRearRightModule.setIdleMode(idleMode);
+        m_frontRightModule.setIdleMode(idleMode);
+        m_frontLeftModule.setIdleMode(idleMode);
+        m_rearLeftModule.setIdleMode(idleMode);
+        m_rearRightModule.setIdleMode(idleMode);
     }
 
     public void resetEncoders() {
-        m_kFrontRightModule.resetEncoders();
-        m_kFrontLeftModule.resetEncoders();
-        m_kRearLeftModule.resetEncoders();
-        m_kRearRightModule.resetEncoders();
+        m_frontRightModule.resetEncoders();
+        m_frontLeftModule.resetEncoders();
+        m_rearLeftModule.resetEncoders();
+        m_rearRightModule.resetEncoders();
     }
 
     /**
@@ -168,24 +198,24 @@ public class Base extends SubsystemBase {
 
         SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates, DriveConstant.kMaxTeleopSpeed);
         //same order as kinematics
-        m_kFrontRightModule.setDesiredState(swerveModuleStates[0]);
-        m_kFrontLeftModule.setDesiredState(swerveModuleStates[1]);
-        m_kRearLeftModule.setDesiredState(swerveModuleStates[2]);
-        m_kRearRightModule.setDesiredState(swerveModuleStates[3]);
+        m_frontRightModule.setDesiredState(swerveModuleStates[0]);
+        m_frontLeftModule.setDesiredState(swerveModuleStates[1]);
+        m_rearLeftModule.setDesiredState(swerveModuleStates[2]);
+        m_rearRightModule.setDesiredState(swerveModuleStates[3]);
     }
 
     public void setWheelsFacingForward() {
-        m_kFrontRightModule.setDesiredState(new SwerveModuleState(0, Rotation2d.fromRadians(0)));
-        m_kFrontLeftModule.setDesiredState(new SwerveModuleState(0, Rotation2d.fromRadians(0)));
-        m_kRearLeftModule.setDesiredState(new SwerveModuleState(0, Rotation2d.fromRadians(0)));
-        m_kRearRightModule.setDesiredState(new SwerveModuleState(0, Rotation2d.fromRadians(0)));
+        m_frontRightModule.setDesiredState(new SwerveModuleState(0, Rotation2d.fromRadians(0)));
+        m_frontLeftModule.setDesiredState(new SwerveModuleState(0, Rotation2d.fromRadians(0)));
+        m_rearLeftModule.setDesiredState(new SwerveModuleState(0, Rotation2d.fromRadians(0)));
+        m_rearRightModule.setDesiredState(new SwerveModuleState(0, Rotation2d.fromRadians(0)));
     }
 
     public void setWheelsInXFormation() {
-        m_kFrontRightModule.setDesiredState(new SwerveModuleState(0, Rotation2d.fromDegrees(-45)));
-        m_kFrontLeftModule.setDesiredState(new SwerveModuleState(0, Rotation2d.fromDegrees(45)));
-        m_kRearLeftModule.setDesiredState(new SwerveModuleState(0, Rotation2d.fromDegrees(-45)));
-        m_kRearRightModule.setDesiredState(new SwerveModuleState(0, Rotation2d.fromDegrees(45)));
+        m_frontRightModule.setDesiredState(new SwerveModuleState(0, Rotation2d.fromDegrees(-45)));
+        m_frontLeftModule.setDesiredState(new SwerveModuleState(0, Rotation2d.fromDegrees(45)));
+        m_rearLeftModule.setDesiredState(new SwerveModuleState(0, Rotation2d.fromDegrees(-45)));
+        m_rearRightModule.setDesiredState(new SwerveModuleState(0, Rotation2d.fromDegrees(45)));
     }
 
     public double getRobotHeadingDegrees() {
@@ -198,9 +228,9 @@ public class Base extends SubsystemBase {
 
     public void resetOdometry(Pose2d desiredPose) {
         m_poseEstimator.resetPosition(m_gyro.getRotation2d(),
-                new SwerveModulePosition[] { m_kFrontRightModule.getPosition(),
-                        m_kFrontLeftModule.getPosition(),
-                        m_kRearLeftModule.getPosition(), m_kRearRightModule.getPosition() },
+                new SwerveModulePosition[] { m_frontRightModule.getPosition(),
+                        m_frontLeftModule.getPosition(),
+                        m_rearLeftModule.getPosition(), m_rearRightModule.getPosition() },
                 desiredPose);
     }
 
@@ -212,11 +242,27 @@ public class Base extends SubsystemBase {
         m_drivingInFieldRelative = fieldRelative;
     }
 
+    /** resets offset to current gyro value */
     public void resetGyroOffset() {
         m_gyroOffset = m_gyro.getRotation2d().getRadians();
     }
 
-    public void setGyroOffset(double offsetInRadians) {
+    /** resets offset to value passed in */
+    public void resetGyroOffset(double offsetInRadians) {
         m_gyroOffset = offsetInRadians;
+    }
+
+    public ChassisSpeeds getRobotRelativeSpeeds() {
+        return DriveConstant.kDriveKinematics.toChassisSpeeds(m_frontRightModule.getState(), m_frontLeftModule.getState(),
+                m_rearLeftModule.getState(), m_rearRightModule.getState());
+    }
+
+    public void driveRobotRelativeChassisSpeeds(ChassisSpeeds speeds) {
+        var swerveModuleStates = DriveConstant.kDriveKinematics.toSwerveModuleStates(speeds);
+
+        m_frontRightModule.setDesiredState(swerveModuleStates[0]);
+        m_frontLeftModule.setDesiredState(swerveModuleStates[1]);
+        m_rearLeftModule.setDesiredState(swerveModuleStates[2]);
+        m_rearRightModule.setDesiredState(swerveModuleStates[3]);
     }
 }

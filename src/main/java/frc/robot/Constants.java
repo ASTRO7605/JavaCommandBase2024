@@ -102,5 +102,8 @@ public final class Constants {
         public static final int kRearRightTurningID = 11;
         public static final int kRearRightDrivingID = 12;
         public static final int kRearRightCANcoderID = 13;
+
+        /** seconds */
+        public static final double kTimeBeforeCoast = 1.5;
     }
 }

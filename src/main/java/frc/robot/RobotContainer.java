@@ -6,13 +6,16 @@ package frc.robot;
 
 import frc.robot.Constants.DriveConstant;
 import frc.robot.Constants.OperatorConstants;
-import frc.robot.commands.Autos;
-import frc.robot.commands.ExampleCommand;
 import frc.robot.subsystems.Base;
-import frc.robot.subsystems.ExampleSubsystem;
+import frc.robot.utils.AutoChooser;
+
+import com.pathplanner.lib.auto.NamedCommands;
+import com.revrobotics.CANSparkBase.IdleMode;
+
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -30,10 +33,12 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 public class RobotContainer {
     // The robot's subsystems and commands are defined here...
     private final Base m_base = new Base();
-    // Replace with CommandPS4Controller or CommandJoystick if needed
+
     private final CommandJoystick m_throttleStick = new CommandJoystick(OperatorConstants.kThrottleStickID);
     private final CommandJoystick m_turnStick = new CommandJoystick(OperatorConstants.kTurnStickID);
     private final CommandXboxController m_copilotController = new CommandXboxController(OperatorConstants.kCopilotControllerID);
+
+    private final AutoChooser m_autoChooser;
 
     /**
      * The container for the robot. Contains subsystems, OI devices, and commands.
@@ -41,6 +46,8 @@ public class RobotContainer {
     public RobotContainer() {
         // Configure the trigger bindings
         configureBindings();
+        configureNamedCommands();
+
         m_base.setDefaultCommand(new RunCommand(() -> {
             double dir_x = m_throttleStick.getX();
             double dir_y = m_throttleStick.getY();
@@ -64,6 +71,8 @@ public class RobotContainer {
 
             m_base.drive(-dir_r * Math.sin(dir_theta), -dir_r * Math.cos(dir_theta), -turn, true);
         }, m_base));
+
+        m_autoChooser = new AutoChooser();
     }
 
     /**
@@ -92,13 +101,34 @@ public class RobotContainer {
         m_throttleStick.button(6).onTrue(new InstantCommand(() -> m_base.switchRobotDrivingMode()));
     }
 
+    private void configureNamedCommands() {
+        NamedCommands.registerCommand("test", new PrintCommand("named command test"));
+    }
+
     /**
      * Use this to pass the autonomous command to the main {@link Robot} class.
      *
      * @return the command to run in autonomous
      */
-    // public Command getAutonomousCommand() {
-    //     // An example command will be run in autonomous
-    //     return Autos.exampleAuto(m_exampleSubsystem);
-    // }
+    public Command getAutonomousCommand() {
+        return m_autoChooser.getSelectedAutoCommand();
+    }
+
+    public void setIdleModeSwerve(IdleMode idleMode) {
+        m_base.setIdleMode(idleMode);
+    }
+
+    public void resetGyroOffsetFromAuto() {
+        var startingAutoPose = m_autoChooser.getStartingAutoPose();
+        if (startingAutoPose.isPresent()) {
+            m_base.resetGyroOffset(startingAutoPose.get().getRotation().getRadians());
+        } else {
+            System.out.print("Starting auto pose null");
+        }
+    }
+
+    public String getSelectedAutoModeName() {
+        return m_autoChooser.getSelectedAutoModeName();
+    }
+
 }
