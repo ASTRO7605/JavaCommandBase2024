@@ -4,7 +4,10 @@
 
 package frc.robot;
 
+import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 
 /**
@@ -20,8 +23,9 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
  * constants are needed, to reduce verbosity.
  */
 public final class Constants {
-    public static class Conversion {
-        public static final double fDegreesToRad = Math.PI / 180; // degrees * factor -> rad
+    public static class FacteursConversion {
+        /** inches * factor -> meters */
+        public static final double fInchesToMeters = 0.0254;
     }
 
     public static class OperatorConstants {
@@ -48,12 +52,14 @@ public final class Constants {
 
         /** important to follow order: front right, front left, rear left, rear right */
         public static final SwerveDriveKinematics kDriveKinematics = new SwerveDriveKinematics(
-                new Translation2d(kDistanceFrontAndRearWheels / 2, -kDistanceRightAndLeftWheels / 2),
+                new Translation2d(kDistanceFrontAndRearWheels / 2,
+                        -kDistanceRightAndLeftWheels / 2),
                 new Translation2d(kDistanceFrontAndRearWheels / 2, kDistanceRightAndLeftWheels / 2),
-                new Translation2d(-kDistanceFrontAndRearWheels / 2, kDistanceRightAndLeftWheels / 2),
-                new Translation2d(-kDistanceFrontAndRearWheels / 2, -kDistanceRightAndLeftWheels / 2));
+                new Translation2d(-kDistanceFrontAndRearWheels / 2,
+                        kDistanceRightAndLeftWheels / 2),
+                new Translation2d(-kDistanceFrontAndRearWheels / 2,
+                        -kDistanceRightAndLeftWheels / 2));
 
-        public static final boolean kGyroReversed = false;
         /** amps */
         public static final double kCurrentLimit = 50;
         /** m/s */
@@ -87,6 +93,37 @@ public final class Constants {
         public static final double kTurningMinInput = -1.0;
         public static final double kTurningMaxInput = 1.0;
 
+        /** seconds */
+        public static final double kTimeBeforeCoast = 1.5;
+
+        public static final double kPThetaRobot = 525;
+        public static final double kIThetaRobot = 0.01;
+        public static final double kDThetaRobot = 25;
+
+        public static final double kPXYRobot = 0.0125;
+        public static final double kIXYRobot = 0;
+        public static final double kDXYRobot = 0;
+
+        public static final double kMaxAutoAlignSpeedY = 0.2;
+        public static final double kMaxAutoAlignSpeedX = 0.1;
+
+        /** radians */
+        public static final double kThresholdRobotAngle = Math.toRadians(1.5);
+        public static final double kThresholdTimerAutoAlign = 0.1;
+
+        /** meters */
+        public static final double kThresholdSpeakerInRangeToShoot = 3.9;
+        /** meters */
+        public static final double kThresholdSpeakerInRangeToStartWheels = 6;
+
+        public static final double kTimeForProjectionInFutureDistance = 0.35;
+        public static final double kTimeForProjectionInFutureRotation = 0.25;
+
+        /** radians */
+        public static final double kBlueSourceApproachAngle = Math.toRadians(120);
+        /** radians */
+        public static final double kRedSourceApproachAngle = Math.toRadians(60);
+
         public static final double kVoltageForCompensation = 10;
 
         public static final int kPowerDistributionHubID = 1;
@@ -102,8 +139,51 @@ public final class Constants {
         public static final int kRearRightTurningID = 11;
         public static final int kRearRightDrivingID = 12;
         public static final int kRearRightCANcoderID = 13;
+    }
 
-        /** seconds */
-        public static final double kTimeBeforeCoast = 1.5;
+    public static class VisionConstant {
+        public static final String kTableNameRight = "photonvision-a";
+        public static final String kTableNameLeft = "photonvision-b";
+        public static final String kTableNameLimelight = "limelight";
+        public static final double kAmbiguityThreshold = 0.4;
+        public static final Transform3d kRightCameraTransform = new Transform3d(
+                new Translation3d(-0.292, -0.176, 0.683),
+                new Rotation3d(0, Math.toRadians(-32), Math.toRadians(-24.6)));
+        public static final Transform3d kLeftCameraTransform = new Transform3d(
+                new Translation3d(-0.292, 0.189, 0.683),
+                new Rotation3d(0, Math.toRadians(-32), Math.toRadians(24.6)));
+
+        public static enum StageAprilTagIDs {
+            RED_SOURCE_SIDE(11), RED_SPEAKER_SIDE(12), RED_MIDDLE_SIDE(13), BLUE_MIDDLE_SIDE(
+                    14), BLUE_SPEAKER_SIDE(15), BLUE_SOURCE_SIDE(16);
+
+            private final int id;
+
+            // Constructor to assign values to the enum constants
+            StageAprilTagIDs(int id) {
+                this.id = id;
+            }
+
+            // Getter to retrieve the associated value
+            public int getId() {
+                return id;
+            }
+        }
+    }
+
+    public static class PoseEstimationConstant {
+        /** x(m), y(m), theta(rad) */
+        public static final double[] kStateStdDevs = { 0.12, 0.12, 0.008 };
+        public static final double[] kVisionStdDevsDefault = { 0.8, 0.8, 0.99 };
+
+        public static final double[] kVisionStdDevsPerMeterBase = { 0.4, 0.4, 0.95 };
+        public static final double[] kVisionStdDevsPerAmbiguityPerMeter = { 10.0, 10.0, 500.0 };
+
+        public static final Translation2d kBlueSpeakerPoseMeters = new Translation2d(
+                -1.5 * FacteursConversion.fInchesToMeters,
+                218.42 * FacteursConversion.fInchesToMeters);
+        public static final Translation2d kRedSpeakerPoseMeters = new Translation2d(
+                652.73 * FacteursConversion.fInchesToMeters,
+                218.42 * FacteursConversion.fInchesToMeters);
     }
 }

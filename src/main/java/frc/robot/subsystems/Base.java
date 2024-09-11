@@ -1,5 +1,9 @@
 package frc.robot.subsystems;
 
+import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.Nat;
+import edu.wpi.first.math.numbers.*;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -15,6 +19,9 @@ import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+
+import java.util.Optional;
+
 import com.kauailabs.navx.frc.AHRS;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.util.HolonomicPathFollowerConfig;
@@ -23,30 +30,31 @@ import com.pathplanner.lib.util.ReplanningConfig;
 import com.revrobotics.CANSparkBase.IdleMode;
 
 import frc.robot.Constants.DriveConstant;
+import frc.robot.Constants.PoseEstimationConstant;
+import frc.robot.Constants.VisionConstant;
+import frc.robot.utils.PoseMeasurement;
 import frc.robot.utils.SwerveUtils;
 
 public class Base extends SubsystemBase {
+
     private final AHRS m_gyro = new AHRS(SPI.Port.kMXP);
 
     // important to follow order
-    private final ModuleSwerve m_frontRightModule = new ModuleSwerve(DriveConstant.kFrontRightTurningID,
+    private final ModuleSwerve m_frontRightModule = new ModuleSwerve(
+            DriveConstant.kFrontRightTurningID,
             DriveConstant.kFrontRightDrivingID, DriveConstant.kFrontRightCANcoderID);
-    private final ModuleSwerve m_frontLeftModule = new ModuleSwerve(DriveConstant.kFrontLeftTurningID,
+    private final ModuleSwerve m_frontLeftModule = new ModuleSwerve(
+            DriveConstant.kFrontLeftTurningID,
             DriveConstant.kFrontLeftDrivingID, DriveConstant.kFrontLeftCANcoderID);
     private final ModuleSwerve m_rearLeftModule = new ModuleSwerve(DriveConstant.kRearLeftTurningID,
             DriveConstant.kRearLeftDrivingID, DriveConstant.kRearLeftCANcoderID);
-    private final ModuleSwerve m_rearRightModule = new ModuleSwerve(DriveConstant.kRearRightTurningID,
+    private final ModuleSwerve m_rearRightModule = new ModuleSwerve(
+            DriveConstant.kRearRightTurningID,
             DriveConstant.kRearRightDrivingID, DriveConstant.kRearRightCANcoderID);
 
-    private final Field2d m_robotField = new Field2d();
-
-    private double m_currentRotationSpeed;
-    private double m_currentTranslationDir = 0.0;
-    private double m_currentTranslationMag = 0.0;
-    private boolean m_drivingInFieldRelative = true;
-
-    /** radians */
-    private double m_gyroOffset = 0.0;
+    private final PIDController m_pidControllerThetaSpeaker = new PIDController(
+            DriveConstant.kPThetaRobot, DriveConstant.kIThetaRobot,
+            DriveConstant.kDThetaRobot);
 
     private SlewRateLimiter m_magLimiter = new SlewRateLimiter(DriveConstant.kMagnitudeSlewRate);
     private SlewRateLimiter m_rotLimiter = new SlewRateLimiter(DriveConstant.kRotationalSlewRate);
@@ -54,19 +62,38 @@ public class Base extends SubsystemBase {
 
     private final SwerveDrivePoseEstimator m_poseEstimator = new SwerveDrivePoseEstimator(
             DriveConstant.kDriveKinematics, m_gyro.getRotation2d(),
-            new SwerveModulePosition[] { m_frontRightModule.getPosition(), m_frontLeftModule.getPosition(),
+            new SwerveModulePosition[] { m_frontRightModule.getPosition(),
+                    m_frontLeftModule.getPosition(),
                     m_rearLeftModule.getPosition(), m_rearRightModule.getPosition() },
-            new Pose2d(new Translation2d(0, 0), new Rotation2d(0)));
+            new Pose2d(new Translation2d(0, 0), new Rotation2d(0)),
+            new Matrix<>(Nat.N3(), Nat.N1(), PoseEstimationConstant.kStateStdDevs),
+            new Matrix<>(Nat.N3(), Nat.N1(), PoseEstimationConstant.kVisionStdDevsDefault));
+
+    private DriverStation.Alliance m_allianceColor = DriverStation.Alliance.Red;
+
+    private final Field2d m_visionFieldLeft = new Field2d();
+    private final Field2d m_visionFieldRight = new Field2d();
+    private final Field2d m_robotField = new Field2d();
+
+    private final Vision m_visionLeft = new Vision(VisionConstant.kTableNameLeft, VisionConstant.kLeftCameraTransform);
+    private final Vision m_visionRight = new Vision(VisionConstant.kTableNameRight,
+            VisionConstant.kRightCameraTransform);
+
+    private Pose2d m_lastPoseEstimate = new Pose2d();
+    private Translation2d m_currentColorSpeakerPose;
+
+    private double m_currentRotationSpeed;
+    private double m_currentTranslationDir = 0.0;
+    private double m_currentTranslationMag = 0.0;
+    private boolean m_drivingInFieldRelative = true;
+    private boolean m_isRotationBeingControlled = false;
+    /** radians */
+    private double m_gyroOffset = 0.0;
 
     public Base() {
         m_gyro.reset();
 
-        m_poseEstimator.resetPosition(m_gyro.getRotation2d(),
-                new SwerveModulePosition[] { m_frontRightModule.getPosition(),
-                        m_frontLeftModule.getPosition(),
-                        m_rearLeftModule.getPosition(), m_rearRightModule.getPosition() },
-                new Pose2d(new Translation2d(0, 0),
-                        new Rotation2d(0)));
+        m_pidControllerThetaSpeaker.enableContinuousInput(-1.0, 1.0);
 
         AutoBuilder.configureHolonomic(
                 this::getRobotPose, // Robot pose supplier
@@ -94,16 +121,62 @@ public class Base extends SubsystemBase {
                 this // Reference to this subsystem to set requirements
         );
 
+        SmartDashboard.putData("Vision Measurement Right", m_visionFieldRight);
+        SmartDashboard.putData("Vision Measurement Left", m_visionFieldLeft);
         SmartDashboard.putData("Robot Measurement", m_robotField);
+
+        m_poseEstimator.resetPosition(m_gyro.getRotation2d(),
+                new SwerveModulePosition[] { m_frontRightModule.getPosition(),
+                        m_frontLeftModule.getPosition(),
+                        m_rearLeftModule.getPosition(), m_rearRightModule.getPosition() },
+                new Pose2d(new Translation2d(0, 0),
+                        new Rotation2d(0)));
+
     }
 
     @Override
     public void periodic() {
+        SmartDashboard.putBoolean("isRotationBeingControlled", m_isRotationBeingControlled);
+        // NaN error checking (not sure if still useful)
+        if (Double.isNaN(getRobotPose().getX()) || Double.isNaN(getRobotPose().getY())
+                || Double.isNaN(getRobotPose().getRotation().getDegrees())) {
+            resetOdometry(m_lastPoseEstimate);
+        }
+        m_lastPoseEstimate = getRobotPose();
+
+        if (DriverStation.getAlliance().isPresent()) {
+            m_allianceColor = DriverStation.getAlliance().get();
+        }
+
+        if (m_allianceColor == DriverStation.Alliance.Blue) {
+            m_currentColorSpeakerPose = PoseEstimationConstant.kBlueSpeakerPoseMeters;
+        } else if (m_allianceColor == DriverStation.Alliance.Red) {
+            m_currentColorSpeakerPose = PoseEstimationConstant.kRedSpeakerPoseMeters;
+        }
+
+        SmartDashboard.putNumber("Left Camera AprilTag ID", getCameraAprilTagID(m_visionLeft));
+        SmartDashboard.putNumber("Right Camera AprilTag ID", getCameraAprilTagID(m_visionRight));
+
+        SmartDashboard.putNumber("Distance to Speaker Meters", getDistanceToSpeaker());
+        SmartDashboard.putNumber("Desired Rotation to Speaker Degrees", Math.toDegrees(getDesiredRotationToSpeaker()));
+        SmartDashboard.putNumber("Rotation PID Error Speaker", getRotationPIDError());
+
+        SmartDashboard.putNumber("Gyro Angle Degrees", getRobotHeading().getDegrees());
+        SmartDashboard.putNumber("Robot Estimated Pose X", getRobotPose().getX());
+        SmartDashboard.putNumber("Robot Estimated Pose Y", getRobotPose().getY());
+        SmartDashboard.putNumber("Robot Estimated Orientation Degrees", getRobotPose().getRotation().getDegrees());
+
         m_poseEstimator.update(m_gyro.getRotation2d(),
                 new SwerveModulePosition[] { m_frontRightModule.getPosition(),
                         m_frontLeftModule.getPosition(),
                         m_rearLeftModule.getPosition(), m_rearRightModule.getPosition() });
+
+        // setRobotPoseVisionEstimate(m_visionLeft, m_visionFieldLeft);
+        // setRobotPoseVisionEstimate(m_visionRight, m_visionFieldRight);
+
         m_robotField.setRobotPose(m_poseEstimator.getEstimatedPosition());
+        SmartDashboard.putNumber("Robot Field X Speed", getFieldRelativeSpeeds().vxMetersPerSecond);
+        SmartDashboard.putNumber("Robot Field Y Speed", getFieldRelativeSpeeds().vyMetersPerSecond);
     }
 
     public void setIdleMode(IdleMode idleMode) {
@@ -124,11 +197,11 @@ public class Base extends SubsystemBase {
      * Method to drive the robot using joystick info.
      *
      * @param xSpeed
-     *            Speed of the robot in the x direction (forward)(m/s).
+     *            Speed of the robot in the x direction (forward)([-1 , 1]).
      * @param ySpeed
-     *            Speed of the robot in the y direction (sideways)(m/s).
+     *            Speed of the robot in the y direction (sideways)([-1 , 1]).
      * @param rotationSpeed
-     *            Angular rate of the robot(radians/s).
+     *            Angular rate of the robot([-1 , 1]).
      * 
      * @param rateLimiting
      *            Whether to enable rate limiting for smoother control.
@@ -147,17 +220,20 @@ public class Base extends SubsystemBase {
             // Calculate the direction slew rate based on an estimate of the lateral acceleration
             double directionSlewRate;
             if (m_currentTranslationMag != 0.0) {
-                directionSlewRate = Math.abs(DriveConstant.kDirectionSlewRate / m_currentTranslationMag);
+                directionSlewRate = Math
+                        .abs(DriveConstant.kDirectionSlewRate / m_currentTranslationMag);
             } else {
                 directionSlewRate = 500.0; //some high number that means the slew rate is effectively instantaneous
             }
 
             double currentTime = WPIUtilJNI.now() * 1e-6;
             double elapsedTime = currentTime - m_prevTime;
-            double angleDif = SwerveUtils.AngleDifference(inputTranslationDir, m_currentTranslationDir);
+            double angleDif = SwerveUtils.AngleDifference(inputTranslationDir,
+                    m_currentTranslationDir);
 
             if (angleDif < 0.45 * Math.PI) {
-                m_currentTranslationDir = SwerveUtils.StepTowardsCircular(m_currentTranslationDir, inputTranslationDir,
+                m_currentTranslationDir = SwerveUtils.StepTowardsCircular(m_currentTranslationDir,
+                        inputTranslationDir,
                         directionSlewRate * elapsedTime);
                 m_currentTranslationMag = m_magLimiter.calculate(inputTranslationMag);
             } else if (angleDif > 0.85 * Math.PI) {
@@ -165,11 +241,13 @@ public class Base extends SubsystemBase {
                     // keep currentTranslationDir unchanged
                     m_currentTranslationMag = m_magLimiter.calculate(0.0);
                 } else {
-                    m_currentTranslationDir = SwerveUtils.WrapAngle(m_currentTranslationDir + Math.PI);
+                    m_currentTranslationDir = SwerveUtils
+                            .WrapAngle(m_currentTranslationDir + Math.PI);
                     m_currentTranslationMag = m_magLimiter.calculate(inputTranslationMag);
                 }
             } else {
-                m_currentTranslationDir = SwerveUtils.StepTowardsCircular(m_currentTranslationDir, inputTranslationDir,
+                m_currentTranslationDir = SwerveUtils.StepTowardsCircular(m_currentTranslationDir,
+                        inputTranslationDir,
                         directionSlewRate * elapsedTime);
                 m_currentTranslationMag = m_magLimiter.calculate(0.0);
             }
@@ -188,15 +266,20 @@ public class Base extends SubsystemBase {
 
         double xSpeedDelivered = xSpeedCommanded * DriveConstant.kMaxTeleopSpeed;
         double ySpeedDelivered = ySpeedCommanded * DriveConstant.kMaxTeleopSpeed;
-        double rotationSpeedDelivered = m_currentRotationSpeed * DriveConstant.kMaxTeleopAngularSpeed;
+        double rotationSpeedDelivered = m_currentRotationSpeed
+                * DriveConstant.kMaxTeleopAngularSpeed;
 
         var swerveModuleStates = DriveConstant.kDriveKinematics
-                .toSwerveModuleStates(m_drivingInFieldRelative ? ChassisSpeeds.fromFieldRelativeSpeeds(xSpeedDelivered, ySpeedDelivered,
-                        rotationSpeedDelivered, Rotation2d.fromRadians(m_gyro.getRotation2d().getRadians() - m_gyroOffset))
+                .toSwerveModuleStates(m_drivingInFieldRelative
+                        ? ChassisSpeeds.fromFieldRelativeSpeeds(xSpeedDelivered, ySpeedDelivered,
+                                rotationSpeedDelivered,
+                                Rotation2d.fromRadians(
+                                        m_gyro.getRotation2d().getRadians() - m_gyroOffset))
                         : new ChassisSpeeds(xSpeedDelivered, ySpeedDelivered,
                                 rotationSpeedDelivered));
 
-        SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates, DriveConstant.kMaxTeleopSpeed);
+        SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates,
+                DriveConstant.kMaxTeleopSpeed);
         //same order as kinematics
         m_frontRightModule.setDesiredState(swerveModuleStates[0]);
         m_frontLeftModule.setDesiredState(swerveModuleStates[1]);
@@ -218,8 +301,8 @@ public class Base extends SubsystemBase {
         m_rearRightModule.setDesiredState(new SwerveModuleState(0, Rotation2d.fromDegrees(45)));
     }
 
-    public double getRobotHeadingDegrees() {
-        return m_gyro.getRotation2d().getDegrees();
+    public Rotation2d getRobotHeading() {
+        return m_gyro.getRotation2d();
     }
 
     public Pose2d getRobotPose() {
@@ -242,9 +325,26 @@ public class Base extends SubsystemBase {
         m_drivingInFieldRelative = fieldRelative;
     }
 
-    /** resets offset to current gyro value */
-    public void resetGyroOffset() {
-        m_gyroOffset = m_gyro.getRotation2d().getRadians();
+    /**
+     * resets current gyro offset for field oriented driving
+     * 
+     * @param usePoseEstimator
+     *            whether or not to use the rotation value from the pose estimator
+     *            to reset. If false, use the current value from the gyro.
+     */
+    public void resetGyroOffset(boolean usePoseEstimator) {
+        if (!usePoseEstimator) {
+            m_gyroOffset = m_gyro.getRotation2d().getRadians();
+        } else {
+            double currentHeading = m_poseEstimator.getEstimatedPosition().getRotation().getRadians();
+            double currentGyroAngle = m_gyro.getRotation2d().getRadians();
+            double targetHeading = (m_allianceColor == DriverStation.Alliance.Blue) ? 0
+                    : Math.toRadians(180);
+
+            double error = targetHeading - currentHeading;
+
+            m_gyroOffset = currentGyroAngle + error;
+        }
     }
 
     /** resets offset to value passed in */
@@ -253,8 +353,19 @@ public class Base extends SubsystemBase {
     }
 
     public ChassisSpeeds getRobotRelativeSpeeds() {
-        return DriveConstant.kDriveKinematics.toChassisSpeeds(m_frontRightModule.getState(), m_frontLeftModule.getState(),
+        return DriveConstant.kDriveKinematics.toChassisSpeeds(m_frontRightModule.getState(),
+                m_frontLeftModule.getState(),
                 m_rearLeftModule.getState(), m_rearRightModule.getState());
+    }
+
+    public ChassisSpeeds getFieldRelativeSpeeds() {
+        ChassisSpeeds robotRelativeSpeeds = getRobotRelativeSpeeds();
+
+        Rotation2d robotAngle = new Rotation2d(m_gyro.getRotation2d().getRadians() - m_gyroOffset
+                - ((m_allianceColor == DriverStation.Alliance.Red) ? Math.toRadians(180) : 0));
+
+        return ChassisSpeeds.fromRobotRelativeSpeeds(robotRelativeSpeeds, robotAngle);
+
     }
 
     public void driveRobotRelativeChassisSpeeds(ChassisSpeeds speeds) {
@@ -265,4 +376,162 @@ public class Base extends SubsystemBase {
         m_rearLeftModule.setDesiredState(swerveModuleStates[2]);
         m_rearRightModule.setDesiredState(swerveModuleStates[3]);
     }
+
+    public boolean isRotationBeingControlled() {
+        return m_isRotationBeingControlled;
+    }
+
+    public void setRotationBeingControlled(boolean isRotationBeingControlled) {
+        m_isRotationBeingControlled = isRotationBeingControlled;
+    }
+
+    /** meters */
+    public double getDistanceToSpeaker() {
+        Translation2d currentPose = m_poseEstimator.getEstimatedPosition().getTranslation();
+        currentPose = currentPose.plus(getProjectedPositionOffset(true));
+        var poseToSpeaker = currentPose.minus(m_currentColorSpeakerPose);
+        return Math.sqrt(Math.pow(poseToSpeaker.getX(), 2) + Math.pow(poseToSpeaker.getY(), 2));
+    }
+
+    /** radians */
+    public double getDesiredRotationToSpeaker() {
+        Translation2d currentPose = m_poseEstimator.getEstimatedPosition().getTranslation();
+        currentPose = currentPose.plus(getProjectedPositionOffset(false));
+        var poseToSpeaker = currentPose.minus(m_currentColorSpeakerPose);
+        SmartDashboard.putNumber("Pose To Speaker X", poseToSpeaker.getX());
+        SmartDashboard.putNumber("Pose To Speaker Y", poseToSpeaker.getY());
+        double desiredRotation = Math.atan2(poseToSpeaker.getY(), poseToSpeaker.getX());
+        if (desiredRotation < 0) {
+            desiredRotation = Math.toRadians(180) + desiredRotation;
+        } else {
+            desiredRotation = Math.toRadians(-180) + desiredRotation;
+        }
+        return desiredRotation;
+    }
+
+    public double getPIDControlledRotationSpeed(boolean alignToSpeaker) {
+        if (alignToSpeaker) {
+            return m_pidControllerThetaSpeaker.calculate(
+                    (m_poseEstimator.getEstimatedPosition().getRotation().getRadians() / (2 * Math.PI)),
+                    (getDesiredRotationToSpeaker() / (2 * Math.PI))); // constraint to [-1, 1]
+        } else {
+            double sourceAngleTarget;
+            if (m_allianceColor == DriverStation.Alliance.Blue) {
+                sourceAngleTarget = DriveConstant.kBlueSourceApproachAngle;
+            } else if (m_allianceColor == DriverStation.Alliance.Red) {
+                sourceAngleTarget = DriveConstant.kRedSourceApproachAngle;
+            } else {
+                return 0;
+            }
+
+            return m_pidControllerThetaSpeaker.calculate(
+                    (m_poseEstimator.getEstimatedPosition().getRotation().getRadians() / (2 * Math.PI)),
+                    sourceAngleTarget / (2 * Math.PI));
+
+        }
+    }
+
+    public boolean isRobotInRangeToShoot() {
+        if (getDistanceToSpeaker() <= DriveConstant.kThresholdSpeakerInRangeToShoot) {
+            return true;
+        }
+        return false;
+    }
+
+    public boolean isRobotInRangeToStartWheels() {
+        if (getDistanceToSpeaker() <= DriveConstant.kThresholdSpeakerInRangeToStartWheels) {
+            return true;
+        }
+        return false;
+    }
+
+    public double getRotationPIDError() {
+        return m_pidControllerThetaSpeaker.getPositionError();
+    }
+
+    public int getCameraAprilTagID(Vision visionObject) {
+        return visionObject.getAprilTagIDInView();
+    }
+
+    public Optional<Pose2d> getAveragePoseFromCameras() {
+        var leftEstimate = m_visionLeft.getRobotPoseEstimate();
+        var rightEstimate = m_visionRight.getRobotPoseEstimate();
+
+        if (leftEstimate.isPresent() && rightEstimate.isPresent()) {
+            var leftPose = leftEstimate.get().getPose().toPose2d();
+            var rightPose = rightEstimate.get().getPose().toPose2d();
+
+            var translation = (leftPose.getTranslation().plus(rightPose.getTranslation())).div(2); // average
+            var rotation = (leftPose.getRotation().plus(rightPose.getRotation())).div(2); // average
+
+            return Optional.of(new Pose2d(translation, rotation));
+        } else if (leftEstimate.isPresent()) {
+            return Optional.of(leftEstimate.get().getPose().toPose2d());
+        } else if (rightEstimate.isPresent()) {
+            return Optional.of(rightEstimate.get().getPose().toPose2d());
+        } else {
+            return Optional.empty();
+        }
+    }
+
+    public boolean isRobotAlignedToShoot() {
+        if (Math.abs(m_poseEstimator.getEstimatedPosition().getRotation().getRadians()
+                - getDesiredRotationToSpeaker()) <= DriveConstant.kThresholdRobotAngle) {
+            return true;
+        }
+        return false;
+    }
+
+    Translation2d getProjectedPositionOffset(boolean usedForDistance) {
+        ChassisSpeeds currentRobotSpeeds = getFieldRelativeSpeeds();
+        double timeForProjectionInFuture;
+        if (usedForDistance) {
+            timeForProjectionInFuture = DriveConstant.kTimeForProjectionInFutureDistance;
+        } else {
+            timeForProjectionInFuture = DriveConstant.kTimeForProjectionInFutureRotation;
+        }
+        return new Translation2d(currentRobotSpeeds.vxMetersPerSecond * timeForProjectionInFuture,
+                currentRobotSpeeds.vyMetersPerSecond * timeForProjectionInFuture);
+    }
+
+    private void setRobotPoseVisionEstimate(Vision visionObject, Field2d visionField2dObject) {
+        if (!visionObject.seesValidTarget()) {
+            // hide robot on dashboard
+            visionField2dObject.setRobotPose(100.0, 100.0, new Rotation2d());
+            return;
+        }
+
+        Optional<PoseMeasurement> estimate = visionObject.getRobotPoseEstimate();
+        if (!estimate.isPresent()) {
+            return;
+        }
+
+        Pose2d measurement2d = estimate.get().getPose().toPose2d();
+
+        if (estimate.get().getAmbiguity() == 0) {
+            estimate.get().setAmbiguity(0.001);
+        }
+
+        var stdDevs = PoseEstimationConstant.kVisionStdDevsPerAmbiguityPerMeter;
+
+        stdDevs[0] = estimate.get().getAmbiguity() * stdDevs[0] + PoseEstimationConstant.kVisionStdDevsPerMeterBase[0];
+        stdDevs[1] = estimate.get().getAmbiguity() * stdDevs[1] + PoseEstimationConstant.kVisionStdDevsPerMeterBase[1];
+        stdDevs[2] = estimate.get().getAmbiguity() * stdDevs[2] + PoseEstimationConstant.kVisionStdDevsPerMeterBase[2];
+
+        var dst = estimate.get().getDistance();
+        stdDevs[0] *= dst; // scale based on distance
+        stdDevs[1] *= dst;
+        stdDevs[2] *= dst;
+
+        SmartDashboard.putNumber("Distance AprilTag " + (visionObject.equals(m_visionLeft) ? "Left" : "Right"),
+                estimate.get().getDistance());
+        SmartDashboard.putNumber("Ambiguity AprilTag " + (visionObject.equals(m_visionLeft) ? "Left" : "Right"),
+                estimate.get().getAmbiguity());
+
+        m_poseEstimator.addVisionMeasurement(measurement2d, estimate.get().getTimestamp(),
+                new Matrix<N3, N1>(Nat.N3(), Nat.N1(), stdDevs));
+
+        visionField2dObject.setRobotPose(measurement2d);
+    }
+
 }
