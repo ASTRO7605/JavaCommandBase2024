@@ -87,6 +87,9 @@ public class ModuleSwerve extends SubsystemBase {
         m_turningMotor.setSmartCurrentLimit((int) DriveConstant.kCurrentLimit);
 
         m_drivingEncoder.setPosition(0);
+
+        // m_drivingMotor.burnFlash();
+        // m_turningMotor.burnFlash();
     }
 
     @Override

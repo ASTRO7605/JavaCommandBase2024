@@ -26,6 +26,26 @@ public final class Constants {
     public static class FacteursConversion {
         /** inches * factor -> meters */
         public static final double fInchesToMeters = 0.0254;
+
+        public static class Barre {
+            public static class PremierJoint {
+                /** ticks * factor -> 0.1 degres */
+                public static final double fPosition = 1800.0 / 4096.0;
+                /** ticks/100ms * factor -> 0.1 degres/s */
+                public static final double fVelocity = 18000.0 / 4096.0;
+                /** ticks/100ms/s * factor -> 0.1 degres/s/s */
+                public static final double fAcceleration = 18000.0 / 4096.0;
+            }
+
+            public static class DeuxiemeJoint {
+                /** ticks * factor -> 0.1 degres */
+                public static final double fPosition = 3600.0 / 4096.0;
+                /** ticks/100ms * factor -> 0.1 degres/s */
+                public static final double fVelocity = 36000.0 / 4096.0;
+                /** ticks/100ms/s * factor -> 0.1 degres/s/s */
+                public static final double fAcceleration = 36000.0 / 4096.0;
+            }
+        }
     }
 
     public static class OperatorConstants {
@@ -185,5 +205,119 @@ public final class Constants {
         public static final Translation2d kRedSpeakerPoseMeters = new Translation2d(
                 652.73 * FacteursConversion.fInchesToMeters,
                 218.42 * FacteursConversion.fInchesToMeters);
+    }
+
+    public static class BarreConstant {
+        public static final int kTimeoutMs = 50;
+
+        public static final double kNominalOutputForward = 0;
+        public static final double kPeakOutputForward = 1;
+        public static final double kNominalOutputReverse = 0;
+        public static final double kPeakOutputReverse = -1;
+
+        public static final double kVoltageForCompensation = 10;
+
+        /** amperes */
+        public static final int kPeakCurrentLimit = 9;
+        /** ms */
+        public static final int kPeakCurrentDuration = 0;
+        /** amperes */
+        public static final int kContinuousCurrent = 9;
+
+        /** 1/10 degre */
+        public static final double kAngleThreshold = 15;
+
+        /** seconds */
+        public static final double kTimerThresholdComeDown = 0.5;
+
+        public static class PremierJoint {
+            public static final int kMoteurID = 19;
+
+            /** 1/10 degre */
+            public static final double kAbsoluteEncoderOffset = -940.1;
+
+            public static final double kPMotion = 1.75;
+            public static final double kIMotion = 0;
+            public static final double kDMotion = 20;
+            public static final double kFMotion = 0;
+            public static final double kMaxAF = 0.065;
+
+            /** 1/10 degre/s */
+            public static final double kVitesse = 2750;
+            /** 1/10 degre/s/s */
+            public static final double kAcceleration = 12000;
+
+            /** 1/10 degre */
+            public static final double kForwardSoftLimit = 1200;
+            /** 1/10 degre */
+            public static final double kReverseSoftLimit = 80;
+
+            public static final double kPourcentageManual = 0.15;
+
+            /** 1/10 degre */
+            public static final double kAngleTrapApproach = 350;
+            /** 1/10 degre */
+            public static final double kAngleTrapIntermediaire = 900;
+            /** 1/10 degre */
+            public static final double kAngleTrapFinal = 1110;
+            /** 1/10 degre */
+            public static final double kAngleAmp = 1020;
+
+            /** 1/10 degre */
+            public static final double kStartPosition = 80;
+        }
+
+        public static class DeuxiemeJoint {
+            public static final int kMoteurID = 20;
+
+            /** 1/10 degre */
+            public static final double kAbsoluteEncoderOffset = 806;
+
+            public static final double kPMotion = 4;
+            public static final double kIMotion = 0;
+            public static final double kDMotion = 50;
+            public static final double kFMotion = 0;
+
+            /** 1/10 degre/s */
+            public static final double kVitesse = 6500;
+            /** 1/10 degre/s/s */
+            public static final double kAcceleration = 150000;
+
+            /** 1/10 degre */
+            public static final double kForwardSoftLimit = 3500;
+            /** 1/10 degre */
+            public static final double kReverseSoftLimit = 100;
+
+            public static final double kPourcentageManual = 0.16;
+
+            /** 1/10 degre */
+            public static final double kAngleTrapApproach = 1900;
+            /** 1/10 degre */
+            public static final double kAngleTrapFinal = 2660;
+            /** 1/10 degre */
+            public static final double kAngleAmpApproach = 1600;
+            /** 1/10 degre */
+            public static final double kAngleAmpFinal = 560;
+
+            /** 1/10 degre */
+            public static final double kStartPosition = 900;
+        }
+    }
+
+    public static class IntakeConstant {
+        public static final int kTopMotorID = 14;
+        public static final int kBottomMotorID = 15;
+        public static final int kCapteurID = 0;
+        /** volts */
+        public static final double kVoltageForCompensation = 10;
+        /** amperes */
+        public static final int kCurrentLimit = 50;
+        /** volts */
+        public static final double kVoltageIntakeShot = 10;
+        /** volts */
+        public static final double kVoltageIntakeCommand = 6.5;
+
+        /** ms */
+        public static final int kTimeoutMs = 50;
     }
 }
