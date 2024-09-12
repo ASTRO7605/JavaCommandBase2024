@@ -171,8 +171,8 @@ public class Base extends SubsystemBase {
                         m_frontLeftModule.getPosition(),
                         m_rearLeftModule.getPosition(), m_rearRightModule.getPosition() });
 
-        // setRobotPoseVisionEstimate(m_visionLeft, m_visionFieldLeft);
-        // setRobotPoseVisionEstimate(m_visionRight, m_visionFieldRight);
+        setRobotPoseVisionEstimate(m_visionLeft, m_visionFieldLeft);
+        setRobotPoseVisionEstimate(m_visionRight, m_visionFieldRight);
 
         m_robotField.setRobotPose(m_poseEstimator.getEstimatedPosition());
         SmartDashboard.putNumber("Robot Field X Speed", getFieldRelativeSpeeds().vxMetersPerSecond);

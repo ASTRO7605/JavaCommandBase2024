@@ -26,7 +26,7 @@ import frc.robot.Constants.DriveConstant;
  * project.
  */
 public class Robot extends TimedRobot {
-    private RobotContainer m_robotContainer;
+    private RobotContainer m_robotContainer = new RobotContainer();
 
     private Command m_autonomousCommand;
 
@@ -41,8 +41,6 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void robotInit() {
-        // Instantiate our RobotContainer.  This will perform all our button bindings, and put our
-        // autonomous chooser on the dashboard.
     }
 
     /**
@@ -74,7 +72,7 @@ public class Robot extends TimedRobot {
 
     @Override
     public void disabledPeriodic() {
-        // SmartDashboard.putString("Selected Auto", m_robotContainer.getSelectedAutoModeName());
+        SmartDashboard.putString("Selected Auto", m_robotContainer.getSelectedAutoModeName());
         if (m_timerDisabled.get() >= DriveConstant.kTimeBeforeCoast && !haveWheelsBeenSetToCoast) {
             m_timerDisabled.stop();
             m_robotContainer.setIdleModeSwerve(IdleMode.kCoast);
@@ -88,12 +86,12 @@ public class Robot extends TimedRobot {
     @Override
     public void autonomousInit() {
         m_robotContainer.setIdleModeSwerve(IdleMode.kCoast);
-        // m_autonomousCommand = m_robotContainer.getAutonomousCommand();
+        m_autonomousCommand = m_robotContainer.getAutonomousCommand();
 
         // schedule the autonomous command (example)
-        // if (m_autonomousCommand != null) {
-        //     m_autonomousCommand.schedule();
-        // }
+        if (m_autonomousCommand != null) {
+            m_autonomousCommand.schedule();
+        }
     }
 
     /** This function is called periodically during autonomous. */

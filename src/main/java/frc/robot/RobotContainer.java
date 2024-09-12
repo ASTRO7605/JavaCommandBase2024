@@ -39,7 +39,7 @@ public class RobotContainer {
     private final CommandXboxController m_copilotController = new CommandXboxController(
             OperatorConstants.kCopilotControllerID);
 
-    // private final AutoChooser m_autoChooser;
+    private final AutoChooser m_autoChooser;
 
     /**
      * The container for the robot. Contains subsystems, OI devices, and commands.
@@ -73,7 +73,7 @@ public class RobotContainer {
             m_base.drive(-dir_r * Math.sin(dir_theta), -dir_r * Math.cos(dir_theta), -turn, true);
         }, m_base));
 
-        // m_autoChooser = new AutoChooser();
+        m_autoChooser = new AutoChooser();
     }
 
     /**
@@ -95,9 +95,16 @@ public class RobotContainer {
         // new Trigger(m_exampleSubsystem::exampleCondition)
         //         .onTrue(new ExampleCommand(m_exampleSubsystem));
 
-        // // Schedule `exampleMethodCommand` when the Xbox controller's B button is pressed,
-        // // cancelling on release.
-        // m_driverController.b().whileTrue(m_exampleSubsystem.exampleMethodCommand());
+        m_turnStick.button(5).whileTrue(new RunCommand(() -> {
+            var latestCameraPose = m_base.getAveragePoseFromCameras();
+            if (latestCameraPose.isPresent()) {
+                m_base.resetOdometry(latestCameraPose.get());
+            }
+        }));
+        m_turnStick.button(6).onTrue(new InstantCommand(() -> {
+            m_base.resetGyroOffset(true);
+        }));
+
         m_throttleStick.button(5).onTrue(new InstantCommand(() -> m_base.resetGyroOffset(false)));
         m_throttleStick.button(6).onTrue(new InstantCommand(() -> m_base.switchRobotDrivingMode()));
     }
@@ -111,25 +118,25 @@ public class RobotContainer {
      *
      * @return the command to run in autonomous
      */
-    // public Command getAutonomousCommand() {
-    //     // return m_autoChooser.getSelectedAutoCommand();
-    // }
+    public Command getAutonomousCommand() {
+        return m_autoChooser.getSelectedAutoCommand();
+    }
 
     public void setIdleModeSwerve(IdleMode idleMode) {
         m_base.setIdleMode(idleMode);
     }
 
     public void resetGyroOffsetFromAuto() {
-        // var startingAutoPose = m_autoChooser.getStartingAutoPose();
-        // if (startingAutoPose.isPresent()) {
-        //     m_base.resetGyroOffset(startingAutoPose.get().getRotation().getRadians());
-        // } else {
-        //     System.out.print("Starting auto pose null");
-        // }
+        var startingAutoPose = m_autoChooser.getStartingAutoPose();
+        if (startingAutoPose.isPresent()) {
+            m_base.resetGyroOffset(startingAutoPose.get().getRotation().getRadians());
+        } else {
+            System.out.print("Starting auto pose null");
+        }
     }
 
-    // public String getSelectedAutoModeName() {
-    //     return m_autoChooser.getSelectedAutoModeName();
-    // }
+    public String getSelectedAutoModeName() {
+        return m_autoChooser.getSelectedAutoModeName();
+    }
 
 }
