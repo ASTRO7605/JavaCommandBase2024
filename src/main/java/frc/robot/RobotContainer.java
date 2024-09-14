@@ -4,7 +4,7 @@
 
 package frc.robot;
 
-import frc.robot.Constants.DriveConstant;
+import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.subsystems.Base;
 import frc.robot.utils.AutoChooser;
@@ -58,17 +58,17 @@ public class RobotContainer {
             double dir_theta = Math.atan2(dir_y, dir_x); // direction of vector (rad)
 
             // Cap norm and add deadband
-            if (dir_r < DriveConstant.kControllerMovementDeadband) {
+            if (dir_r < DriveConstants.kControllerMovementDeadband) {
                 dir_r = 0.0;
             } else if (dir_r > 1.0) {
                 dir_r = 1.0;
             } else {
-                dir_r = (dir_r - DriveConstant.kControllerMovementDeadband) /
-                        (1 - DriveConstant.kControllerMovementDeadband);
+                dir_r = (dir_r - DriveConstants.kControllerMovementDeadband) /
+                        (1 - DriveConstants.kControllerMovementDeadband);
             }
 
             double turn = 0;
-            turn = MathUtil.applyDeadband(m_turnStick.getX(), DriveConstant.kControllerRotationDeadband);
+            turn = MathUtil.applyDeadband(m_turnStick.getX(), DriveConstants.kControllerRotationDeadband);
 
             m_base.drive(-dir_r * Math.sin(dir_theta), -dir_r * Math.cos(dir_theta), -turn, true);
         }, m_base));

@@ -14,7 +14,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import frc.robot.Constants.DriveConstant;
+import frc.robot.Constants.DriveConstants;
 
 /**
  * The VM is configured to automatically run this class, and to call the
@@ -73,7 +73,7 @@ public class Robot extends TimedRobot {
     @Override
     public void disabledPeriodic() {
         SmartDashboard.putString("Selected Auto", m_robotContainer.getSelectedAutoModeName());
-        if (m_timerDisabled.get() >= DriveConstant.kTimeBeforeCoast && !haveWheelsBeenSetToCoast) {
+        if (m_timerDisabled.get() >= DriveConstants.kTimeBeforeCoast && !haveWheelsBeenSetToCoast) {
             m_timerDisabled.stop();
             m_robotContainer.setIdleModeSwerve(IdleMode.kCoast);
         }

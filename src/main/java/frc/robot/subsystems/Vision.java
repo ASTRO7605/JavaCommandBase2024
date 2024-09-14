@@ -12,7 +12,7 @@ import org.photonvision.targeting.PhotonTrackedTarget;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants.VisionConstant;
+import frc.robot.Constants.VisionConstants;
 import frc.robot.utils.PoseMeasurement;
 
 public class Vision extends SubsystemBase {
@@ -49,11 +49,11 @@ public class Vision extends SubsystemBase {
             m_latestMultiResult = m_latestResult.getMultiTagResult();
             m_latestSingleResult = m_latestResult.getBestTarget();
             if (m_latestMultiResult.estimatedPose.isPresent) {
-                if (m_latestMultiResult.estimatedPose.ambiguity < VisionConstant.kAmbiguityThreshold) {
+                if (m_latestMultiResult.estimatedPose.ambiguity < VisionConstants.kAmbiguityThreshold) {
                     m_isLatestMultiResultValid = true;
                 }
             } else if (m_latestSingleResult
-                    .getPoseAmbiguity() < VisionConstant.kAmbiguityThreshold) {
+                    .getPoseAmbiguity() < VisionConstants.kAmbiguityThreshold) {
                 m_isLatestSingleResultValid = true;
             }
         } else {

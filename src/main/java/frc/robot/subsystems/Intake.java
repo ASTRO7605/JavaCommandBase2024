@@ -7,25 +7,20 @@ import com.revrobotics.CANSparkLowLevel.MotorType;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants.IntakeConstant;
+import frc.robot.Constants.IntakeConstants;
 
 public class Intake extends SubsystemBase {
-    private final CANSparkMax m_topMotor;
-    private final CANSparkMax m_bottomMotor;
+    private final CANSparkMax m_topMotor = new CANSparkMax(IntakeConstants.kTopMotorID, MotorType.kBrushless);
+    private final CANSparkMax m_bottomMotor = new CANSparkMax(IntakeConstants.kBottomMotorID, MotorType.kBrushless);
 
-    private final DigitalInput m_capteurInterieurIntake;
+    private final DigitalInput m_capteurInterieurIntake = new DigitalInput(IntakeConstants.kCapteurID);
 
     public Intake() {
-        m_topMotor = new CANSparkMax(IntakeConstant.kTopMotorID, MotorType.kBrushless);
-        m_bottomMotor = new CANSparkMax(IntakeConstant.kBottomMotorID, MotorType.kBrushless);
-
-        m_capteurInterieurIntake = new DigitalInput(IntakeConstant.kCapteurID);
-
         m_topMotor.setInverted(true);
         m_bottomMotor.setInverted(true);
 
-        m_topMotor.setCANTimeout(IntakeConstant.kTimeoutMs);
-        m_bottomMotor.setCANTimeout(IntakeConstant.kTimeoutMs);
+        m_topMotor.setCANTimeout(IntakeConstants.kTimeoutMs);
+        m_bottomMotor.setCANTimeout(IntakeConstants.kTimeoutMs);
 
         // See https://docs.revrobotics.com/sparkmax/operating-modes/control-interfaces for docs
         m_topMotor.setPeriodicFramePeriod(CANSparkLowLevel.PeriodicFrame.kStatus0, 157);
@@ -40,11 +35,11 @@ public class Intake extends SubsystemBase {
         m_topMotor.setIdleMode(CANSparkMax.IdleMode.kBrake);
         m_bottomMotor.setIdleMode(CANSparkMax.IdleMode.kBrake);
 
-        m_topMotor.enableVoltageCompensation(IntakeConstant.kVoltageForCompensation);
-        m_bottomMotor.enableVoltageCompensation(IntakeConstant.kVoltageForCompensation);
+        m_topMotor.enableVoltageCompensation(IntakeConstants.kVoltageForCompensation);
+        m_bottomMotor.enableVoltageCompensation(IntakeConstants.kVoltageForCompensation);
 
-        m_topMotor.setSmartCurrentLimit(IntakeConstant.kCurrentLimit);
-        m_bottomMotor.setSmartCurrentLimit(IntakeConstant.kCurrentLimit);
+        m_topMotor.setSmartCurrentLimit(IntakeConstants.kCurrentLimit);
+        m_bottomMotor.setSmartCurrentLimit(IntakeConstants.kCurrentLimit);
 
         // m_topMotor.burnFlash();
         // m_bottomMotor.burnFlash();
@@ -62,9 +57,9 @@ public class Intake extends SubsystemBase {
     public void setIntake(boolean on, boolean reversed, boolean forShot) {
         double voltage = 0;
         if (forShot || reversed) {
-            voltage = IntakeConstant.kVoltageIntakeShot;
+            voltage = IntakeConstants.kVoltageIntakeShot;
         } else {
-            voltage = IntakeConstant.kVoltageIntakeCommand;
+            voltage = IntakeConstants.kVoltageIntakeCommand;
         }
         if (reversed) {
             voltage *= -1;

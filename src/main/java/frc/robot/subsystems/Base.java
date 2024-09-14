@@ -29,9 +29,9 @@ import com.pathplanner.lib.util.PIDConstants;
 import com.pathplanner.lib.util.ReplanningConfig;
 import com.revrobotics.CANSparkBase.IdleMode;
 
-import frc.robot.Constants.DriveConstant;
-import frc.robot.Constants.PoseEstimationConstant;
-import frc.robot.Constants.VisionConstant;
+import frc.robot.Constants.DriveConstants;
+import frc.robot.Constants.PoseEstimationConstants;
+import frc.robot.Constants.VisionConstants;
 import frc.robot.utils.PoseMeasurement;
 import frc.robot.utils.SwerveUtils;
 
@@ -41,33 +41,33 @@ public class Base extends SubsystemBase {
 
     // important to follow order
     private final ModuleSwerve m_frontRightModule = new ModuleSwerve(
-            DriveConstant.kFrontRightTurningID,
-            DriveConstant.kFrontRightDrivingID, DriveConstant.kFrontRightCANcoderID);
+            DriveConstants.kFrontRightTurningID,
+            DriveConstants.kFrontRightDrivingID, DriveConstants.kFrontRightCANcoderID);
     private final ModuleSwerve m_frontLeftModule = new ModuleSwerve(
-            DriveConstant.kFrontLeftTurningID,
-            DriveConstant.kFrontLeftDrivingID, DriveConstant.kFrontLeftCANcoderID);
-    private final ModuleSwerve m_rearLeftModule = new ModuleSwerve(DriveConstant.kRearLeftTurningID,
-            DriveConstant.kRearLeftDrivingID, DriveConstant.kRearLeftCANcoderID);
+            DriveConstants.kFrontLeftTurningID,
+            DriveConstants.kFrontLeftDrivingID, DriveConstants.kFrontLeftCANcoderID);
+    private final ModuleSwerve m_rearLeftModule = new ModuleSwerve(DriveConstants.kRearLeftTurningID,
+            DriveConstants.kRearLeftDrivingID, DriveConstants.kRearLeftCANcoderID);
     private final ModuleSwerve m_rearRightModule = new ModuleSwerve(
-            DriveConstant.kRearRightTurningID,
-            DriveConstant.kRearRightDrivingID, DriveConstant.kRearRightCANcoderID);
+            DriveConstants.kRearRightTurningID,
+            DriveConstants.kRearRightDrivingID, DriveConstants.kRearRightCANcoderID);
 
     private final PIDController m_pidControllerThetaSpeaker = new PIDController(
-            DriveConstant.kPThetaRobot, DriveConstant.kIThetaRobot,
-            DriveConstant.kDThetaRobot);
+            DriveConstants.kPThetaRobot, DriveConstants.kIThetaRobot,
+            DriveConstants.kDThetaRobot);
 
-    private SlewRateLimiter m_magLimiter = new SlewRateLimiter(DriveConstant.kMagnitudeSlewRate);
-    private SlewRateLimiter m_rotLimiter = new SlewRateLimiter(DriveConstant.kRotationalSlewRate);
+    private SlewRateLimiter m_magLimiter = new SlewRateLimiter(DriveConstants.kMagnitudeSlewRate);
+    private SlewRateLimiter m_rotLimiter = new SlewRateLimiter(DriveConstants.kRotationalSlewRate);
     private double m_prevTime = WPIUtilJNI.now() * 1e-6;
 
     private final SwerveDrivePoseEstimator m_poseEstimator = new SwerveDrivePoseEstimator(
-            DriveConstant.kDriveKinematics, m_gyro.getRotation2d(),
+            DriveConstants.kDriveKinematics, m_gyro.getRotation2d(),
             new SwerveModulePosition[] { m_frontRightModule.getPosition(),
                     m_frontLeftModule.getPosition(),
                     m_rearLeftModule.getPosition(), m_rearRightModule.getPosition() },
             new Pose2d(new Translation2d(0, 0), new Rotation2d(0)),
-            new Matrix<>(Nat.N3(), Nat.N1(), PoseEstimationConstant.kStateStdDevs),
-            new Matrix<>(Nat.N3(), Nat.N1(), PoseEstimationConstant.kVisionStdDevsDefault));
+            new Matrix<>(Nat.N3(), Nat.N1(), PoseEstimationConstants.kStateStdDevs),
+            new Matrix<>(Nat.N3(), Nat.N1(), PoseEstimationConstants.kVisionStdDevsDefault));
 
     private DriverStation.Alliance m_allianceColor = DriverStation.Alliance.Red;
 
@@ -75,9 +75,10 @@ public class Base extends SubsystemBase {
     private final Field2d m_visionFieldRight = new Field2d();
     private final Field2d m_robotField = new Field2d();
 
-    private final Vision m_visionLeft = new Vision(VisionConstant.kTableNameLeft, VisionConstant.kLeftCameraTransform);
-    private final Vision m_visionRight = new Vision(VisionConstant.kTableNameRight,
-            VisionConstant.kRightCameraTransform);
+    private final Vision m_visionLeft = new Vision(VisionConstants.kTableNameLeft,
+            VisionConstants.kLeftCameraTransform);
+    private final Vision m_visionRight = new Vision(VisionConstants.kTableNameRight,
+            VisionConstants.kRightCameraTransform);
 
     private Pose2d m_lastPoseEstimate = new Pose2d();
     private Translation2d m_currentColorSpeakerPose;
@@ -101,10 +102,10 @@ public class Base extends SubsystemBase {
                 this::getRobotRelativeSpeeds, // ChassisSpeeds supplier. MUST BE ROBOT RELATIVE
                 this::driveRobotRelativeChassisSpeeds, // Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds
                 new HolonomicPathFollowerConfig( // HolonomicPathFollowerConfig, this should likely live in your Constants class
-                        new PIDConstants(DriveConstant.kPAutoMovementController, 0.0, 0.0), // Translation PID constants
-                        new PIDConstants(DriveConstant.kPAutoMovementController, 0.0, 0.0), // Rotation PID constants
-                        DriveConstant.kMaxAutoSpeed, // Max module speed, in m/s
-                        DriveConstant.kChassisRadius, // Drive base radius in meters. Distance from robot center to furthest module.
+                        new PIDConstants(DriveConstants.kPAutoMovementController, 0.0, 0.0), // Translation PID constants
+                        new PIDConstants(DriveConstants.kPAutoMovementController, 0.0, 0.0), // Rotation PID constants
+                        DriveConstants.kMaxAutoSpeed, // Max module speed, in m/s
+                        DriveConstants.kChassisRadius, // Drive base radius in meters. Distance from robot center to furthest module.
                         new ReplanningConfig(true, true) // Default path replanning config. See the API for the options here
                 ),
                 () -> {
@@ -149,9 +150,9 @@ public class Base extends SubsystemBase {
         }
 
         if (m_allianceColor == DriverStation.Alliance.Blue) {
-            m_currentColorSpeakerPose = PoseEstimationConstant.kBlueSpeakerPoseMeters;
+            m_currentColorSpeakerPose = PoseEstimationConstants.kBlueSpeakerPoseMeters;
         } else if (m_allianceColor == DriverStation.Alliance.Red) {
-            m_currentColorSpeakerPose = PoseEstimationConstant.kRedSpeakerPoseMeters;
+            m_currentColorSpeakerPose = PoseEstimationConstants.kRedSpeakerPoseMeters;
         }
 
         SmartDashboard.putNumber("Left Camera AprilTag ID", getCameraAprilTagID(m_visionLeft));
@@ -221,7 +222,7 @@ public class Base extends SubsystemBase {
             double directionSlewRate;
             if (m_currentTranslationMag != 0.0) {
                 directionSlewRate = Math
-                        .abs(DriveConstant.kDirectionSlewRate / m_currentTranslationMag);
+                        .abs(DriveConstants.kDirectionSlewRate / m_currentTranslationMag);
             } else {
                 directionSlewRate = 500.0; //some high number that means the slew rate is effectively instantaneous
             }
@@ -264,12 +265,12 @@ public class Base extends SubsystemBase {
             m_currentRotationSpeed = rotationSpeed;
         }
 
-        double xSpeedDelivered = xSpeedCommanded * DriveConstant.kMaxTeleopSpeed;
-        double ySpeedDelivered = ySpeedCommanded * DriveConstant.kMaxTeleopSpeed;
+        double xSpeedDelivered = xSpeedCommanded * DriveConstants.kMaxTeleopSpeed;
+        double ySpeedDelivered = ySpeedCommanded * DriveConstants.kMaxTeleopSpeed;
         double rotationSpeedDelivered = m_currentRotationSpeed
-                * DriveConstant.kMaxTeleopAngularSpeed;
+                * DriveConstants.kMaxTeleopAngularSpeed;
 
-        var swerveModuleStates = DriveConstant.kDriveKinematics
+        var swerveModuleStates = DriveConstants.kDriveKinematics
                 .toSwerveModuleStates(m_drivingInFieldRelative
                         ? ChassisSpeeds.fromFieldRelativeSpeeds(xSpeedDelivered, ySpeedDelivered,
                                 rotationSpeedDelivered,
@@ -279,7 +280,7 @@ public class Base extends SubsystemBase {
                                 rotationSpeedDelivered));
 
         SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates,
-                DriveConstant.kMaxTeleopSpeed);
+                DriveConstants.kMaxTeleopSpeed);
         //same order as kinematics
         m_frontRightModule.setDesiredState(swerveModuleStates[0]);
         m_frontLeftModule.setDesiredState(swerveModuleStates[1]);
@@ -353,7 +354,7 @@ public class Base extends SubsystemBase {
     }
 
     public ChassisSpeeds getRobotRelativeSpeeds() {
-        return DriveConstant.kDriveKinematics.toChassisSpeeds(m_frontRightModule.getState(),
+        return DriveConstants.kDriveKinematics.toChassisSpeeds(m_frontRightModule.getState(),
                 m_frontLeftModule.getState(),
                 m_rearLeftModule.getState(), m_rearRightModule.getState());
     }
@@ -369,7 +370,7 @@ public class Base extends SubsystemBase {
     }
 
     public void driveRobotRelativeChassisSpeeds(ChassisSpeeds speeds) {
-        var swerveModuleStates = DriveConstant.kDriveKinematics.toSwerveModuleStates(speeds);
+        var swerveModuleStates = DriveConstants.kDriveKinematics.toSwerveModuleStates(speeds);
 
         m_frontRightModule.setDesiredState(swerveModuleStates[0]);
         m_frontLeftModule.setDesiredState(swerveModuleStates[1]);
@@ -417,9 +418,9 @@ public class Base extends SubsystemBase {
         } else {
             double sourceAngleTarget;
             if (m_allianceColor == DriverStation.Alliance.Blue) {
-                sourceAngleTarget = DriveConstant.kBlueSourceApproachAngle;
+                sourceAngleTarget = DriveConstants.kBlueSourceApproachAngle;
             } else if (m_allianceColor == DriverStation.Alliance.Red) {
-                sourceAngleTarget = DriveConstant.kRedSourceApproachAngle;
+                sourceAngleTarget = DriveConstants.kRedSourceApproachAngle;
             } else {
                 return 0;
             }
@@ -432,14 +433,14 @@ public class Base extends SubsystemBase {
     }
 
     public boolean isRobotInRangeToShoot() {
-        if (getDistanceToSpeaker() <= DriveConstant.kThresholdSpeakerInRangeToShoot) {
+        if (getDistanceToSpeaker() <= DriveConstants.kThresholdSpeakerInRangeToShoot) {
             return true;
         }
         return false;
     }
 
     public boolean isRobotInRangeToStartWheels() {
-        if (getDistanceToSpeaker() <= DriveConstant.kThresholdSpeakerInRangeToStartWheels) {
+        if (getDistanceToSpeaker() <= DriveConstants.kThresholdSpeakerInRangeToStartWheels) {
             return true;
         }
         return false;
@@ -476,7 +477,7 @@ public class Base extends SubsystemBase {
 
     public boolean isRobotAlignedToShoot() {
         if (Math.abs(m_poseEstimator.getEstimatedPosition().getRotation().getRadians()
-                - getDesiredRotationToSpeaker()) <= DriveConstant.kThresholdRobotAngle) {
+                - getDesiredRotationToSpeaker()) <= DriveConstants.kThresholdRobotAngle) {
             return true;
         }
         return false;
@@ -486,9 +487,9 @@ public class Base extends SubsystemBase {
         ChassisSpeeds currentRobotSpeeds = getFieldRelativeSpeeds();
         double timeForProjectionInFuture;
         if (usedForDistance) {
-            timeForProjectionInFuture = DriveConstant.kTimeForProjectionInFutureDistance;
+            timeForProjectionInFuture = DriveConstants.kTimeForProjectionInFutureDistance;
         } else {
-            timeForProjectionInFuture = DriveConstant.kTimeForProjectionInFutureRotation;
+            timeForProjectionInFuture = DriveConstants.kTimeForProjectionInFutureRotation;
         }
         return new Translation2d(currentRobotSpeeds.vxMetersPerSecond * timeForProjectionInFuture,
                 currentRobotSpeeds.vyMetersPerSecond * timeForProjectionInFuture);
@@ -512,11 +513,11 @@ public class Base extends SubsystemBase {
             estimate.get().setAmbiguity(0.001);
         }
 
-        var stdDevs = PoseEstimationConstant.kVisionStdDevsPerAmbiguityPerMeter;
+        var stdDevs = PoseEstimationConstants.kVisionStdDevsPerAmbiguityPerMeter;
 
-        stdDevs[0] = estimate.get().getAmbiguity() * stdDevs[0] + PoseEstimationConstant.kVisionStdDevsPerMeterBase[0];
-        stdDevs[1] = estimate.get().getAmbiguity() * stdDevs[1] + PoseEstimationConstant.kVisionStdDevsPerMeterBase[1];
-        stdDevs[2] = estimate.get().getAmbiguity() * stdDevs[2] + PoseEstimationConstant.kVisionStdDevsPerMeterBase[2];
+        stdDevs[0] = estimate.get().getAmbiguity() * stdDevs[0] + PoseEstimationConstants.kVisionStdDevsPerMeterBase[0];
+        stdDevs[1] = estimate.get().getAmbiguity() * stdDevs[1] + PoseEstimationConstants.kVisionStdDevsPerMeterBase[1];
+        stdDevs[2] = estimate.get().getAmbiguity() * stdDevs[2] + PoseEstimationConstants.kVisionStdDevsPerMeterBase[2];
 
         var dst = estimate.get().getDistance();
         stdDevs[0] *= dst; // scale based on distance

@@ -12,7 +12,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import frc.robot.Constants.DriveConstant;
+import frc.robot.Constants.DriveConstants;
 
 public class ModuleSwerve extends SubsystemBase {
     private final CANSparkMax m_turningMotor;
@@ -57,34 +57,34 @@ public class ModuleSwerve extends SubsystemBase {
         m_drivingMotor.setIdleMode(IdleMode.kBrake);
 
         m_drivingEncoder
-                .setPositionConversionFactor(DriveConstant.kWheelCirconf / DriveConstant.kDrivingGearRatio); //motor rotations to meters
+                .setPositionConversionFactor(DriveConstants.kWheelCirconf / DriveConstants.kDrivingGearRatio); //motor rotations to meters
 
         m_drivingEncoder.setVelocityConversionFactor(
-                (DriveConstant.kWheelCirconf / DriveConstant.kDrivingGearRatio) / 60); // m/s
+                (DriveConstants.kWheelCirconf / DriveConstants.kDrivingGearRatio) / 60); // m/s
 
         m_turningSparkMaxEncoder.setPosition(m_turningCANcoder.getAbsolutePosition().getValue() * (2 * Math.PI));
-        m_turningSparkMaxEncoder.setPositionConversionFactor((2 * Math.PI) / DriveConstant.kTurningGearRatio); // motor rotations to radians
+        m_turningSparkMaxEncoder.setPositionConversionFactor((2 * Math.PI) / DriveConstants.kTurningGearRatio); // motor rotations to radians
         m_turningSparkMaxEncoder
-                .setVelocityConversionFactor(((2 * Math.PI) / DriveConstant.kTurningGearRatio) / 60); // radians/s
+                .setVelocityConversionFactor(((2 * Math.PI) / DriveConstants.kTurningGearRatio) / 60); // radians/s
 
         m_turningPIDController.setPositionPIDWrappingEnabled(true); // PID can go through 0 to get to setpoint
         m_turningPIDController.setPositionPIDWrappingMinInput(0);
         m_turningPIDController.setPositionPIDWrappingMaxInput(2 * Math.PI);
 
-        m_drivingPIDController.setP(DriveConstant.kPDriving);
-        m_drivingPIDController.setI(DriveConstant.kIDriving);
-        m_drivingPIDController.setD(DriveConstant.kDDriving);
-        m_drivingPIDController.setFF(DriveConstant.kFFDriving);
-        m_drivingPIDController.setOutputRange(DriveConstant.kDrivingMinInput, DriveConstant.kDrivingMaxInput);
+        m_drivingPIDController.setP(DriveConstants.kPDriving);
+        m_drivingPIDController.setI(DriveConstants.kIDriving);
+        m_drivingPIDController.setD(DriveConstants.kDDriving);
+        m_drivingPIDController.setFF(DriveConstants.kFFDriving);
+        m_drivingPIDController.setOutputRange(DriveConstants.kDrivingMinInput, DriveConstants.kDrivingMaxInput);
 
-        m_turningPIDController.setP(DriveConstant.kPTurning);
-        m_turningPIDController.setI(DriveConstant.kITurning);
-        m_turningPIDController.setD(DriveConstant.kDTurning);
-        m_turningPIDController.setFF(DriveConstant.kFFTurning);
-        m_turningPIDController.setOutputRange(DriveConstant.kTurningMinInput, DriveConstant.kTurningMaxInput);
+        m_turningPIDController.setP(DriveConstants.kPTurning);
+        m_turningPIDController.setI(DriveConstants.kITurning);
+        m_turningPIDController.setD(DriveConstants.kDTurning);
+        m_turningPIDController.setFF(DriveConstants.kFFTurning);
+        m_turningPIDController.setOutputRange(DriveConstants.kTurningMinInput, DriveConstants.kTurningMaxInput);
 
-        m_drivingMotor.setSmartCurrentLimit((int) DriveConstant.kCurrentLimit);
-        m_turningMotor.setSmartCurrentLimit((int) DriveConstant.kCurrentLimit);
+        m_drivingMotor.setSmartCurrentLimit((int) DriveConstants.kCurrentLimit);
+        m_turningMotor.setSmartCurrentLimit((int) DriveConstants.kCurrentLimit);
 
         m_drivingEncoder.setPosition(0);
 

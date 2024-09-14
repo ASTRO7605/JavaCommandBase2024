@@ -55,7 +55,7 @@ public final class Constants {
         public static final double kAxisThreshold = 0.5;
     }
 
-    public static class DriveConstant {
+    public static class DriveConstants {
         public static final double kDrivingGearRatio = 6.75;
         public static final double kTurningGearRatio = 150.0 / 7.0;
 
@@ -161,7 +161,7 @@ public final class Constants {
         public static final int kRearRightCANcoderID = 13;
     }
 
-    public static class VisionConstant {
+    public static class VisionConstants {
         public static final String kTableNameRight = "photonvision-a";
         public static final String kTableNameLeft = "photonvision-b";
         public static final String kTableNameLimelight = "limelight";
@@ -191,7 +191,7 @@ public final class Constants {
         }
     }
 
-    public static class PoseEstimationConstant {
+    public static class PoseEstimationConstants {
         /** x(m), y(m), theta(rad) */
         public static final double[] kStateStdDevs = { 0.12, 0.12, 0.008 };
         public static final double[] kVisionStdDevsDefault = { 0.8, 0.8, 0.99 };
@@ -207,7 +207,7 @@ public final class Constants {
                 218.42 * FacteursConversion.fInchesToMeters);
     }
 
-    public static class BarreConstant {
+    public static class BarreConstants {
         public static final int kTimeoutMs = 50;
 
         public static final double kNominalOutputForward = 0;
@@ -304,7 +304,7 @@ public final class Constants {
         }
     }
 
-    public static class IntakeConstant {
+    public static class IntakeConstants {
         public static final int kTopMotorID = 14;
         public static final int kBottomMotorID = 15;
         public static final int kCapteurID = 0;
@@ -319,5 +319,43 @@ public final class Constants {
 
         /** ms */
         public static final int kTimeoutMs = 50;
+    }
+
+    public static class LedConstants {
+        public static final int kLedChannel = 9;
+        public static final int kNumLeds = 12;
+
+        /** moves by 1 LED each n 20-millis periods */
+        public static final int kSweepPrescale = 6;
+
+        /** switches LEDs each n 20-millis periods */
+        public static final int kAlternatePrescale = 15;
+
+        /** switches LEDs each n 20-millis periods */
+        public static final int kFlashPrescale = 5;
+
+        public static final int kNumSweepFullOnLeds = 8;
+
+        /** number of LEDs for 'in position' starting indicator */
+        public static final int kNumIndicatorLeds = 2;
+
+        /** R, G, B */
+        public static record Color(int red, int green, int blue) {
+        }
+
+        public static class Colors {
+            public static final Color off = new Color(0, 0, 0);
+            public static final Color redAlliance = new Color(255, 0, 0);
+            public static final Color blueAlliance = new Color(0, 0, 255);
+            public static final Color noteInIntake = new Color(255, 15, 0);
+            public static final Color noteSeen = new Color(255, 10, 150);
+            public static final Color robotInRange = new Color(0, 255, 0);
+            public static final Color robotInStartingPositionXY = new Color(0, 255, 0);
+            public static final Color robotInStartingPositionAngle = new Color(255, 105, 180);
+        }
+
+        public static enum Animation {
+            ALLIANCE, SPLIT,
+        }
     }
 }
