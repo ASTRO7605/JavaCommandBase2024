@@ -4,6 +4,8 @@
 
 package frc.robot;
 
+import java.util.List;
+
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -29,20 +31,36 @@ public final class Constants {
 
         public static class Barre {
             public static class PremierJoint {
-                /** ticks * factor -> 0.1 degres */
+                /** ticks * factor -> 1/10 degres */
                 public static final double fPosition = 1800.0 / 4096.0;
-                /** ticks/100ms * factor -> 0.1 degres/s */
+                /** ticks/100ms * factor -> 1/10 degres/s */
                 public static final double fVelocity = 18000.0 / 4096.0;
-                /** ticks/100ms/s * factor -> 0.1 degres/s/s */
+                /** ticks/100ms/s * factor -> 1/10 degres/s/s */
                 public static final double fAcceleration = 18000.0 / 4096.0;
             }
 
             public static class DeuxiemeJoint {
-                /** ticks * factor -> 0.1 degres */
+                /** ticks * factor -> 1/10 degres */
                 public static final double fPosition = 3600.0 / 4096.0;
-                /** ticks/100ms * factor -> 0.1 degres/s */
+                /** ticks/100ms * factor -> 1/10 degres/s */
                 public static final double fVelocity = 36000.0 / 4096.0;
-                /** ticks/100ms/s * factor -> 0.1 degres/s/s */
+                /** ticks/100ms/s * factor -> 1/10 degres/s/s */
+                public static final double fAcceleration = 36000.0 / 4096.0;
+            }
+        }
+
+        public static class Shooter {
+            public static class ShooterWheels {
+                /** ticks * factor -> wheel rotations */
+                public static final double fPosition = 1.0 / 42.0;
+            }
+
+            public static class ShooterAngle {
+                /** ticks * factor -> 1/10 degre */
+                public static final double fPosition = 3600.0 / 4096.0;
+                /** ticks/100ms * factor -> 1/10 degre/s */
+                public static final double fVelocity = 36000.0 / 4096.0;
+                /** ticks/100ms/s * factor -> 1/10 degre/s/s */
                 public static final double fAcceleration = 36000.0 / 4096.0;
             }
         }
@@ -208,7 +226,8 @@ public final class Constants {
     }
 
     public static class BarreConstants {
-        public static final int kTimeoutMs = 50;
+        /** ms */
+        public static final int kTimeout = 50;
 
         public static final double kNominalOutputForward = 0;
         public static final double kPeakOutputForward = 1;
@@ -318,7 +337,7 @@ public final class Constants {
         public static final double kVoltageIntakeCommand = 6.5;
 
         /** ms */
-        public static final int kTimeoutMs = 50;
+        public static final int kTimeout = 50;
     }
 
     public static class LedConstants {
@@ -356,6 +375,128 @@ public final class Constants {
 
         public static enum Animation {
             ALLIANCE, SPLIT,
+        }
+    }
+
+    public static class ShooterConstants {
+
+        public static enum ShooterState {
+            INIT, WAITING_FOR_SUBSYTEMS, MOVE_NOTE_IN_SHOOTER, WAITING_FOR_NOTE_TO_ENTER, WAITING_FOR_NOTE_TO_EXIT, WAITING_FOR_END, COMPLETE, NO_NOTE,
+        }
+
+        public static final int kCapteurID = 1;
+
+        /** seconds */
+        public static final double kTimerThresholdAfterExit = 0.2;
+
+        /**
+         * a record used for containing measured shooter data to use to interpolate
+         * speed and angle
+         * 
+         * @param distance
+         *            distance to the speaker (meters)
+         * @param speed
+         *            wheel speeds (RPM)
+         * @param angle
+         *            shooter angle (1/10 degree)
+         */
+        public static record ShooterData(double distance, double speed, double angle) {
+        }
+
+        public static final List<ShooterData> kShooterSpeedAndAngleAccordingToDistance = List
+                .of(new ShooterData(1.35, 5500, 650), new ShooterData(1.60, 5500, 600),
+                        new ShooterData(1.90, 5500, 545), new ShooterData(2.20, 5500, 485),
+                        new ShooterData(2.52, 5500, 445), new ShooterData(2.81, 5500, 415),
+                        new ShooterData(3.11, 5500, 400), new ShooterData(3.40, 5500, 387.5),
+                        new ShooterData(3.90, 5500, 370), new ShooterData(7.00, 5500, 365),
+                        new ShooterData(7.01, 4500, 450));
+
+        public static class ShooterWheels {
+            public static final int kLeftMotorID = 16;
+            public static final int kRightMotorID = 17;
+
+            /** RPM */
+            public static final double kSpeedManualSpeaker = 5500;
+            /** RPM */
+            public static final double kSpeedAmp = 500;
+            /** RPM */
+            public static final double kSpeedTrap = 1575;
+            /** RPM */
+            public static final double kSpeedThreshold = 100;
+
+            public static final double kPLeftFlywheel = 0.00025;
+            public static final double kILeftFlywheel = 0.000001;
+            public static final double kDLeftFlywheel = 0.01;
+            public static final double kFFLeftFlywheel = 0;
+
+            public static final double kPRightFlywheel = 0.00025;
+            public static final double kIRightFlywheel = 0.000001;
+            public static final double kDRightFlywheel = 0.01;
+            public static final double kFFRightFlywheel = 0;
+
+            /** amps */
+            public static final int kCurrentLimit = 50;
+            /** volts */
+            public static final int kVoltageForCompensation = 12;
+
+            /** RPM */
+            public static final double kSpeedDifferenceForSpin = 500;
+
+            /** seconds */
+            public static final double kMaxTimeForRevUp = 1.5;
+        }
+
+        public static class ShooterAngle {
+            public static final int kMotorID = 18;
+            /** 1/10 degre */
+            public static final double kAbsoluteEncoderOffset = -2078.12;
+
+            /** 1/10 degre */
+            public static final double kManualSpeakerAngle = 650;
+
+            /** volts */
+            public static final int kVoltageForCompensation = 10;
+            /** ms */
+            public static final int kTimeout = 50;
+
+            public static final double kNominalOutputForward = 0;
+            public static final double kPeakOutputForward = 1;
+            public static final double kNominalOutputReverse = 0;
+            public static final double kPeakOutputReverse = -1;
+
+            public static final double kPPositionAngle = 7.25;
+            public static final double kIPositionAngle = 0.015;
+            public static final double kDPositionAngle = 25.0;
+            public static final double kFPositionAngle = 0;
+            public static final double kMaxAF = 0;
+
+            /** 1/10 degre/s */
+            public static final double kVitesse = 1000;
+            /** 1/10 degre/s/s */
+            public static final double kAcceleration = 4000;
+
+            /** 1/10 degre */
+            public static final double kAngleThreshold = 7.5;
+
+            /** amperes */
+            public static final int kPeakCurrentLimit = 9;
+            /** ms */
+            public static final int kPeakCurrentDuration = 0;
+            /** amperes */
+            public static final int kContinuousCurrent = 9;
+
+            /** 1/10 degre */
+            public static final double kForwardSoftLimit = 785;
+            /** 1/10 degre */
+            public static final double kReverseSoftLimit = 200;
+
+            /** 1/10 degre */
+            public static final double kAngleAmp = 640;
+            /** 1/10 degre */
+            public static final double kAngleTrap = 770;
+            /** 1/10 degre */
+            public static final double kIntermediateAngle = 450;
+
         }
     }
 }

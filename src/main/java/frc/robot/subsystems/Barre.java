@@ -22,12 +22,12 @@ public class Barre extends SubsystemBase {
         m_moteurDeuxiemeJoint.setNeutralMode(NeutralMode.Brake);
 
         m_moteurPremierJoint.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Relative, 0,
-                BarreConstants.kTimeoutMs);
+                BarreConstants.kTimeout);
         m_moteurDeuxiemeJoint.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Relative, 0,
-                BarreConstants.kTimeoutMs);
+                BarreConstants.kTimeout);
 
-        m_moteurPremierJoint.configFeedbackNotContinuous(true, BarreConstants.kTimeoutMs);
-        m_moteurDeuxiemeJoint.configFeedbackNotContinuous(true, BarreConstants.kTimeoutMs);
+        m_moteurPremierJoint.configFeedbackNotContinuous(true, BarreConstants.kTimeout);
+        m_moteurDeuxiemeJoint.configFeedbackNotContinuous(true, BarreConstants.kTimeout);
 
         m_moteurPremierJoint.setSensorPhase(true);
         m_moteurDeuxiemeJoint.setSensorPhase(false);
@@ -39,94 +39,94 @@ public class Barre extends SubsystemBase {
         seedEncoderDeuxiemeJoint();
 
         m_moteurPremierJoint.setStatusFramePeriod(StatusFrameEnhanced.Status_13_Base_PIDF0, 101,
-                BarreConstants.kTimeoutMs);
+                BarreConstants.kTimeout);
         m_moteurPremierJoint.setStatusFramePeriod(StatusFrameEnhanced.Status_10_MotionMagic, 101,
-                BarreConstants.kTimeoutMs);
+                BarreConstants.kTimeout);
         m_moteurDeuxiemeJoint.setStatusFramePeriod(StatusFrameEnhanced.Status_13_Base_PIDF0, 101,
-                BarreConstants.kTimeoutMs);
+                BarreConstants.kTimeout);
         m_moteurDeuxiemeJoint.setStatusFramePeriod(StatusFrameEnhanced.Status_10_MotionMagic, 101,
-                BarreConstants.kTimeoutMs);
+                BarreConstants.kTimeout);
 
         m_moteurPremierJoint.configPeakOutputForward(BarreConstants.kPeakOutputForward,
-                BarreConstants.kTimeoutMs);
+                BarreConstants.kTimeout);
         m_moteurPremierJoint.configPeakOutputReverse(BarreConstants.kPeakOutputReverse,
-                BarreConstants.kTimeoutMs);
+                BarreConstants.kTimeout);
         m_moteurPremierJoint.configNominalOutputForward(BarreConstants.kNominalOutputForward,
-                BarreConstants.kTimeoutMs);
+                BarreConstants.kTimeout);
         m_moteurPremierJoint.configNominalOutputReverse(BarreConstants.kNominalOutputReverse,
-                BarreConstants.kTimeoutMs);
+                BarreConstants.kTimeout);
 
         m_moteurDeuxiemeJoint.configPeakOutputForward(BarreConstants.kPeakOutputForward,
-                BarreConstants.kTimeoutMs);
+                BarreConstants.kTimeout);
         m_moteurDeuxiemeJoint.configPeakOutputReverse(BarreConstants.kPeakOutputReverse,
-                BarreConstants.kTimeoutMs);
+                BarreConstants.kTimeout);
         m_moteurDeuxiemeJoint.configNominalOutputForward(BarreConstants.kNominalOutputForward,
-                BarreConstants.kTimeoutMs);
+                BarreConstants.kTimeout);
         m_moteurDeuxiemeJoint.configNominalOutputReverse(BarreConstants.kNominalOutputReverse,
-                BarreConstants.kTimeoutMs);
+                BarreConstants.kTimeout);
 
         m_moteurPremierJoint.selectProfileSlot(0, 0); // motion
-        m_moteurPremierJoint.config_kP(0, BarreConstants.PremierJoint.kPMotion, BarreConstants.kTimeoutMs);
-        m_moteurPremierJoint.config_kI(0, BarreConstants.PremierJoint.kIMotion, BarreConstants.kTimeoutMs);
-        m_moteurPremierJoint.config_kD(0, BarreConstants.PremierJoint.kDMotion, BarreConstants.kTimeoutMs);
-        m_moteurPremierJoint.config_kF(0, BarreConstants.PremierJoint.kFMotion, BarreConstants.kTimeoutMs);
+        m_moteurPremierJoint.config_kP(0, BarreConstants.PremierJoint.kPMotion, BarreConstants.kTimeout);
+        m_moteurPremierJoint.config_kI(0, BarreConstants.PremierJoint.kIMotion, BarreConstants.kTimeout);
+        m_moteurPremierJoint.config_kD(0, BarreConstants.PremierJoint.kDMotion, BarreConstants.kTimeout);
+        m_moteurPremierJoint.config_kF(0, BarreConstants.PremierJoint.kFMotion, BarreConstants.kTimeout);
 
         m_moteurDeuxiemeJoint.selectProfileSlot(0, 0); // motion
-        m_moteurDeuxiemeJoint.config_kP(0, BarreConstants.DeuxiemeJoint.kPMotion, BarreConstants.kTimeoutMs);
-        m_moteurDeuxiemeJoint.config_kI(0, BarreConstants.DeuxiemeJoint.kIMotion, BarreConstants.kTimeoutMs);
-        m_moteurDeuxiemeJoint.config_kD(0, BarreConstants.DeuxiemeJoint.kDMotion, BarreConstants.kTimeoutMs);
-        m_moteurDeuxiemeJoint.config_kF(0, BarreConstants.DeuxiemeJoint.kFMotion, BarreConstants.kTimeoutMs);
+        m_moteurDeuxiemeJoint.config_kP(0, BarreConstants.DeuxiemeJoint.kPMotion, BarreConstants.kTimeout);
+        m_moteurDeuxiemeJoint.config_kI(0, BarreConstants.DeuxiemeJoint.kIMotion, BarreConstants.kTimeout);
+        m_moteurDeuxiemeJoint.config_kD(0, BarreConstants.DeuxiemeJoint.kDMotion, BarreConstants.kTimeout);
+        m_moteurDeuxiemeJoint.config_kF(0, BarreConstants.DeuxiemeJoint.kFMotion, BarreConstants.kTimeout);
 
         m_moteurPremierJoint.configMotionCruiseVelocity(
                 BarreConstants.PremierJoint.kVitesse / FacteursConversion.Barre.PremierJoint.fVelocity,
-                BarreConstants.kTimeoutMs);
+                BarreConstants.kTimeout);
         m_moteurPremierJoint.configMotionAcceleration(
                 BarreConstants.PremierJoint.kAcceleration / FacteursConversion.Barre.PremierJoint.fAcceleration,
-                BarreConstants.kTimeoutMs);
+                BarreConstants.kTimeout);
 
         m_moteurDeuxiemeJoint.configMotionCruiseVelocity(
                 BarreConstants.DeuxiemeJoint.kVitesse / FacteursConversion.Barre.DeuxiemeJoint.fVelocity,
-                BarreConstants.kTimeoutMs);
+                BarreConstants.kTimeout);
         m_moteurDeuxiemeJoint.configMotionAcceleration(
                 BarreConstants.DeuxiemeJoint.kAcceleration / FacteursConversion.Barre.DeuxiemeJoint.fAcceleration,
-                BarreConstants.kTimeoutMs);
+                BarreConstants.kTimeout);
 
         m_moteurPremierJoint.configVoltageCompSaturation(BarreConstants.kVoltageForCompensation,
-                BarreConstants.kTimeoutMs);
+                BarreConstants.kTimeout);
         m_moteurPremierJoint.enableVoltageCompensation(true);
 
         m_moteurDeuxiemeJoint.configVoltageCompSaturation(BarreConstants.kVoltageForCompensation,
-                BarreConstants.kTimeoutMs);
+                BarreConstants.kTimeout);
         m_moteurDeuxiemeJoint.enableVoltageCompensation(true);
 
-        m_moteurPremierJoint.configPeakCurrentLimit(BarreConstants.kPeakCurrentLimit, BarreConstants.kTimeoutMs);
-        m_moteurPremierJoint.configPeakCurrentDuration(BarreConstants.kPeakCurrentDuration, BarreConstants.kTimeoutMs);
-        m_moteurPremierJoint.configContinuousCurrentLimit(BarreConstants.kContinuousCurrent, BarreConstants.kTimeoutMs);
+        m_moteurPremierJoint.configPeakCurrentLimit(BarreConstants.kPeakCurrentLimit, BarreConstants.kTimeout);
+        m_moteurPremierJoint.configPeakCurrentDuration(BarreConstants.kPeakCurrentDuration, BarreConstants.kTimeout);
+        m_moteurPremierJoint.configContinuousCurrentLimit(BarreConstants.kContinuousCurrent, BarreConstants.kTimeout);
         m_moteurDeuxiemeJoint.enableCurrentLimit(true);
 
-        m_moteurDeuxiemeJoint.configPeakCurrentLimit(BarreConstants.kPeakCurrentLimit, BarreConstants.kTimeoutMs);
-        m_moteurDeuxiemeJoint.configPeakCurrentDuration(BarreConstants.kPeakCurrentDuration, BarreConstants.kTimeoutMs);
+        m_moteurDeuxiemeJoint.configPeakCurrentLimit(BarreConstants.kPeakCurrentLimit, BarreConstants.kTimeout);
+        m_moteurDeuxiemeJoint.configPeakCurrentDuration(BarreConstants.kPeakCurrentDuration, BarreConstants.kTimeout);
         m_moteurDeuxiemeJoint.configContinuousCurrentLimit(BarreConstants.kContinuousCurrent,
-                BarreConstants.kTimeoutMs);
+                BarreConstants.kTimeout);
         m_moteurDeuxiemeJoint.enableCurrentLimit(true);
 
         m_moteurPremierJoint.configForwardSoftLimitThreshold(
                 BarreConstants.PremierJoint.kForwardSoftLimit / FacteursConversion.Barre.PremierJoint.fPosition,
-                BarreConstants.kTimeoutMs);
+                BarreConstants.kTimeout);
         m_moteurPremierJoint.configReverseSoftLimitThreshold(
                 BarreConstants.PremierJoint.kReverseSoftLimit / FacteursConversion.Barre.PremierJoint.fPosition,
-                BarreConstants.kTimeoutMs);
-        m_moteurPremierJoint.configForwardSoftLimitEnable(true, BarreConstants.kTimeoutMs);
-        m_moteurPremierJoint.configReverseSoftLimitEnable(true, BarreConstants.kTimeoutMs);
+                BarreConstants.kTimeout);
+        m_moteurPremierJoint.configForwardSoftLimitEnable(true, BarreConstants.kTimeout);
+        m_moteurPremierJoint.configReverseSoftLimitEnable(true, BarreConstants.kTimeout);
 
         m_moteurDeuxiemeJoint.configForwardSoftLimitThreshold(
                 BarreConstants.DeuxiemeJoint.kForwardSoftLimit / FacteursConversion.Barre.DeuxiemeJoint.fPosition,
-                BarreConstants.kTimeoutMs);
+                BarreConstants.kTimeout);
         m_moteurDeuxiemeJoint.configReverseSoftLimitThreshold(
                 BarreConstants.DeuxiemeJoint.kReverseSoftLimit / FacteursConversion.Barre.DeuxiemeJoint.fPosition,
-                BarreConstants.kTimeoutMs);
-        m_moteurDeuxiemeJoint.configForwardSoftLimitEnable(true, BarreConstants.kTimeoutMs);
-        m_moteurDeuxiemeJoint.configReverseSoftLimitEnable(true, BarreConstants.kTimeoutMs);
+                BarreConstants.kTimeout);
+        m_moteurDeuxiemeJoint.configForwardSoftLimitEnable(true, BarreConstants.kTimeout);
+        m_moteurDeuxiemeJoint.configReverseSoftLimitEnable(true, BarreConstants.kTimeout);
 
     }
 

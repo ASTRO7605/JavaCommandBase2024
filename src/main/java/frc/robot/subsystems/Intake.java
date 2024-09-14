@@ -19,8 +19,8 @@ public class Intake extends SubsystemBase {
         m_topMotor.setInverted(true);
         m_bottomMotor.setInverted(true);
 
-        m_topMotor.setCANTimeout(IntakeConstants.kTimeoutMs);
-        m_bottomMotor.setCANTimeout(IntakeConstants.kTimeoutMs);
+        m_topMotor.setCANTimeout(IntakeConstants.kTimeout);
+        m_bottomMotor.setCANTimeout(IntakeConstants.kTimeout);
 
         // See https://docs.revrobotics.com/sparkmax/operating-modes/control-interfaces for docs
         m_topMotor.setPeriodicFramePeriod(CANSparkLowLevel.PeriodicFrame.kStatus0, 157);
