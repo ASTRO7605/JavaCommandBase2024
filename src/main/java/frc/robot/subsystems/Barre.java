@@ -13,10 +13,13 @@ import frc.robot.Constants.BarreConstants;
 import frc.robot.Constants.FacteursConversion;
 
 public class Barre extends SubsystemBase {
-    private final TalonSRX m_moteurPremierJoint = new TalonSRX(BarreConstants.PremierJoint.kMoteurID);
-    private final TalonSRX m_moteurDeuxiemeJoint = new TalonSRX(BarreConstants.DeuxiemeJoint.kMoteurID);
+    private final TalonSRX m_moteurPremierJoint;
+    private final TalonSRX m_moteurDeuxiemeJoint;
 
     public Barre() {
+        SmartDashboard.putString("test", "in barre constructor");
+        m_moteurPremierJoint = new TalonSRX(BarreConstants.PremierJoint.kMoteurID);
+        m_moteurDeuxiemeJoint = new TalonSRX(BarreConstants.DeuxiemeJoint.kMoteurID);
         // init can be optimized
         m_moteurPremierJoint.setNeutralMode(NeutralMode.Brake);
         m_moteurDeuxiemeJoint.setNeutralMode(NeutralMode.Brake);
@@ -132,6 +135,7 @@ public class Barre extends SubsystemBase {
 
     @Override
     public void periodic() {
+        SmartDashboard.putNumber("test", 123);
         SmartDashboard.putNumber("Premier Joint Position", getJointPosition(m_moteurPremierJoint));
         SmartDashboard.putNumber("Deuxieme Joint Position", getJointPosition(m_moteurDeuxiemeJoint));
         SmartDashboard.putNumber("Premier Joint Velocity", getJointVelocity(m_moteurPremierJoint));

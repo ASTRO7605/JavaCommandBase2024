@@ -6,7 +6,10 @@ package frc.robot;
 
 import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.OperatorConstants;
+import frc.robot.Constants.FacteursConversion.Barre;
 import frc.robot.subsystems.Base;
+import frc.robot.subsystems.Intake;
+// import frc.robot.subsystems.Led;
 import frc.robot.utils.AutoChooser;
 
 import com.pathplanner.lib.auto.NamedCommands;
@@ -33,6 +36,9 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 public class RobotContainer {
     // The robot's subsystems and commands are defined here...
     private final Base m_base = new Base();
+    private final Barre m_barre = new Barre();
+    private final Intake m_intake = new Intake();
+    // private final Led m_led = new Led();
 
     private final CommandJoystick m_throttleStick = new CommandJoystick(OperatorConstants.kThrottleStickID);
     private final CommandJoystick m_turnStick = new CommandJoystick(OperatorConstants.kTurnStickID);

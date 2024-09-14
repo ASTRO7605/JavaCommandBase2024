@@ -73,10 +73,10 @@ public class Robot extends TimedRobot {
     @Override
     public void disabledPeriodic() {
         SmartDashboard.putString("Selected Auto", m_robotContainer.getSelectedAutoModeName());
-        if (m_timerDisabled.get() >= DriveConstants.kTimeBeforeCoast && !haveWheelsBeenSetToCoast) {
-            m_timerDisabled.stop();
-            m_robotContainer.setIdleModeSwerve(IdleMode.kCoast);
-        }
+        // if (m_timerDisabled.get() >= DriveConstants.kTimeBeforeCoast && !haveWheelsBeenSetToCoast) {
+        //     m_timerDisabled.stop();
+        //     m_robotContainer.setIdleModeSwerve(IdleMode.kCoast);
+        // }
     }
 
     /**
@@ -105,7 +105,7 @@ public class Robot extends TimedRobot {
         // teleop starts running. If you want the autonomous to
         // continue until interrupted by another command, remove
         // this line or comment it out.
-        m_robotContainer.resetGyroOffsetFromAuto();
+        //m_robotContainer.resetGyroOffsetFromAuto();
         m_robotContainer.setIdleModeSwerve(IdleMode.kBrake);
         if (m_autonomousCommand != null) {
             m_autonomousCommand.cancel();
